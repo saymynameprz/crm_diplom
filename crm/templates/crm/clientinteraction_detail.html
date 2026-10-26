@@ -1,0 +1,19 @@
+{% extends "crm/base.html" %}
+{% block title %}Взаимодействие с клиентом{% endblock %}
+{% block content %}
+<h1>{{ interaction.subject }}</h1>
+<dl>
+    <dt>Клиент</dt><dd><a href="{{ interaction.client.get_absolute_url }}">{{ interaction.client }}</a></dd>
+    <dt>Тип</dt><dd>{{ interaction.get_interaction_type_display }}</dd>
+    <dt>Время взаимодействия</dt><dd><time datetime="{{ interaction.occurred_at|date:'c' }}">{{ interaction.occurred_at|date:"d.m.Y H:i" }} UTC</time></dd>
+    <dt>Автор</dt><dd>{{ interaction.created_by }}</dd>
+    <dt>Описание</dt><dd>{{ interaction.description|default:"Нет описания"|linebreaksbr }}</dd>
+    <dt>Создано</dt><dd>{{ interaction.created_at|date:"d.m.Y H:i" }} UTC</dd>
+    <dt>Изменено</dt><dd>{{ interaction.updated_at|date:"d.m.Y H:i" }} UTC</dd>
+</dl>
+<div class="actions">
+    <a href="{% url 'interaction_update' interaction.pk %}">Редактировать</a>
+    {% if user.is_superuser %}<a href="{% url 'interaction_delete' interaction.pk %}">Удалить</a>{% endif %}
+    <a href="{% url 'interaction_list' %}">К истории</a>
+</div>
+{% endblock %}

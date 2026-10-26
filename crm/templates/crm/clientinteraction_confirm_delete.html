@@ -1,0 +1,10 @@
+{% extends "crm/base.html" %}
+{% block title %}Удаление взаимодействия{% endblock %}
+{% block content %}
+<h1>Удаление взаимодействия</h1>
+<p>Удалить запись «{{ interaction.subject }}»? Это действие нельзя отменить.</p>
+<form method="post">
+    {% csrf_token %}
+    <div class="actions"><button type="submit" class="danger">Удалить</button><a href="{{ interaction.get_absolute_url }}">Отмена</a></div>
+</form>
+{% endblock %}

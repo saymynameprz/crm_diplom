@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -193,3 +194,52 @@ class Deal(models.Model):
 
     def get_absolute_url(self):
         return reverse("deal_detail", kwargs={"pk": self.pk})
+
+
+class ClientInteractionQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        if not user.is_authenticated or not user.is_active:
+            return self.none()
+        return self.all() if user.is_superuser else self.filter(created_by=user)
+
+
+class ClientInteraction(models.Model):
+    class Type(models.TextChoices):
+        CALL = "call", "Телефонный звонок"
+        MEETING = "meeting", "Встреча"
+        EMAIL = "email", "Электронное письмо"
+        COMMENT = "comment", "Комментарий"
+
+    client = models.ForeignKey(Client, verbose_name="Клиент", on_delete=models.PROTECT, related_name="interactions")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Автор", on_delete=models.PROTECT, related_name="client_interactions")
+    interaction_type = models.CharField("Тип взаимодействия", max_length=20, choices=Type.choices)
+    subject = models.CharField("Тема", max_length=200)
+    description = models.TextField("Описание", max_length=5000, blank=True)
+    occurred_at = models.DateTimeField("Время взаимодействия", default=timezone.now)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+    updated_at = models.DateTimeField("Изменено", auto_now=True)
+
+    objects = ClientInteractionQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "Взаимодействие с клиентом"
+        verbose_name_plural = "Взаимодействия с клиентами"
+        ordering = ["-occurred_at", "-pk"]
+        indexes = [
+            models.Index(fields=["created_by", "-occurred_at", "-id"], name="interaction_author_time"),
+            models.Index(fields=["client", "-occurred_at", "-id"], name="interaction_client_time"),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.occurred_at is not None:
+            if timezone.is_naive(self.occurred_at):
+                raise ValidationError({"occurred_at": "Укажите дату и время с часовым поясом."})
+            if self.occurred_at > timezone.now():
+                raise ValidationError({"occurred_at": "Будущая дата запрещена. Планируемые события оформляйте как задачи."})
+
+    def __str__(self):
+        return self.subject
+
+    def get_absolute_url(self):
+        return reverse("interaction_detail", kwargs={"pk": self.pk})

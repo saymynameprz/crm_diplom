@@ -1,0 +1,27 @@
+{
+  "old_crm_rows_in_copy": {
+    "crm_client": 0,
+    "crm_clientrequest": 0,
+    "crm_task": 0,
+    "crm_deal": 0
+  },
+  "old_crm_tables_rows_and_schema_preserved": true,
+  "new_history_table_empty": true,
+  "working_database_file_hash_unchanged": true,
+  "old_205_tests_unchanged": true,
+  "code_checks": {
+    "crm/models.py": {
+      "preexisting_definitions_changed": []
+    },
+    "crm/forms.py": {
+      "preexisting_definitions_changed": []
+    },
+    "crm/views.py": {
+      "preexisting_definitions_changed": [
+        "ClientDetailView",
+        "ClientDeleteView"
+      ]
+    }
+  },
+  "services_kanban_js_unchanged": true
+}

@@ -29,4 +29,15 @@
     <li><a href="{{ deal.get_absolute_url }}">{{ deal.title }}</a> — {{ deal.amount|floatformat:"2" }} ₽ · {{ deal.get_stage_display }}</li>
 {% empty %}<li>Нет доступных сделок клиента.</li>{% endfor %}
 </ul>
+<section aria-labelledby="client-history-title">
+<h2 id="client-history-title">История взаимодействий</h2>
+<p><a href="{% url 'interaction_create' %}?client={{ client.pk }}">Добавить взаимодействие</a></p>
+<ul class="client-list">
+{% for interaction in client_interactions %}
+    <li><a href="{{ interaction.get_absolute_url }}">{{ interaction.subject }}</a> — {{ interaction.get_interaction_type_display }}<br>
+    <time datetime="{{ interaction.occurred_at|date:'c' }}">{{ interaction.occurred_at|date:"d.m.Y H:i" }} UTC</time> · {{ interaction.created_by }}</li>
+{% empty %}<li>Нет доступной истории взаимодействий.</li>{% endfor %}
+</ul>
+{% if has_more_interactions %}<p><a href="{% url 'interaction_list' %}?client={{ client.pk }}">Вся история этого клиента</a></p>{% endif %}
+</section>
 {% endblock %}

@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import PermissionDenied
 from django.db import DatabaseError
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
@@ -17,8 +18,8 @@ from django.views.csrf import csrf_failure as default_csrf_failure
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 
-from .forms import ClientForm, ClientRequestForm, TaskForm, DealForm, DealStageForm
-from .models import Client, ClientRequest, Task, Deal
+from .forms import ClientForm, ClientRequestForm, TaskForm, DealForm, DealStageForm, ClientInteractionForm, InteractionFilterForm
+from .models import Client, ClientRequest, Task, Deal, ClientInteraction
 from .services import AutomationError, create_request_with_task
 from .kanban import load_columns
 
@@ -84,6 +85,9 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
             related = related.filter(assigned_to=self.request.user)
         context["client_requests"] = related
         context["client_deals"] = Deal.objects.visible_to(self.request.user).filter(client=self.object).select_related("assigned_to")
+        history = list(ClientInteraction.objects.visible_to(self.request.user).filter(client=self.object).select_related("created_by").order_by("-occurred_at", "-pk")[:11])
+        context["client_interactions"] = history[:10]
+        context["has_more_interactions"] = len(history) > 10
         return context
 
 
@@ -112,7 +116,7 @@ class ClientDeleteView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMi
         try:
             return super().form_valid(form)
         except ProtectedError:
-            form.add_error(None, "Нельзя удалить клиента: у него есть связанные заявки или сделки. Данные сохранены.")
+            form.add_error(None, "Нельзя удалить клиента: у него есть связанные заявки, сделки или история взаимодействий. Данные сохранены.")
             return self.form_invalid(form)
 
 
@@ -434,3 +438,68 @@ class DealChangeStageView(DealAccessMixin, SingleObjectMixin, View):
         if wants_kanban_json(request):
             return kanban_error(message, 409)
         return render(request, "crm/deal_stage_conflict.html", {"message": message}, status=409)
+
+
+class InteractionAccessMixin(LoginRequiredMixin):
+    model = ClientInteraction
+    context_object_name = "interaction"
+
+    def get_queryset(self):
+        return super().get_queryset().visible_to(self.request.user).select_related("client", "created_by")
+
+
+class InteractionListView(InteractionAccessMixin, ListView):
+    context_object_name = "interactions"
+    paginate_by = 10
+
+    def get_queryset(self):
+        interactions = super().get_queryset()
+        self.filter_form = InteractionFilterForm(self.request.GET or None)
+        if self.filter_form.is_bound and not self.filter_form.is_valid():
+            return interactions.none()
+        params = self.filter_form.cleaned_data if self.filter_form.is_bound else {}
+        if params.get("q"):
+            interactions = interactions.filter(Q(subject__icontains=params["q"]) | Q(client__full_name__icontains=params["q"]))
+        if params.get("interaction_type"):
+            interactions = interactions.filter(interaction_type=params["interaction_type"])
+        if params.get("client"):
+            interactions = interactions.filter(client=params["client"])
+        return interactions.order_by("occurred_at", "pk") if params.get("sort") == "oldest" else interactions.order_by("-occurred_at", "-pk")
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs), "filter_form": self.filter_form}
+
+
+class InteractionDetailView(InteractionAccessMixin, DetailView):
+    pass
+
+
+class InteractionFormMixin:
+    form_class = ClientInteractionForm
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_form_kwargs(self):
+        return {**super().get_form_kwargs(), "user": self.request.user}
+
+    def get_initial(self):
+        return {**super().get_initial(), **({"client": self.request.GET["client"]} if "client" in self.request.GET and not self.object else {})}
+
+
+class InteractionCreateView(InteractionAccessMixin, InteractionFormMixin, SuccessMessageMixin, CreateView):
+    success_message = "Взаимодействие добавлено."
+
+
+class InteractionUpdateView(InteractionAccessMixin, InteractionFormMixin, SuccessMessageMixin, UpdateView):
+    success_message = "Взаимодействие сохранено."
+
+
+class InteractionDeleteView(InteractionAccessMixin, SuccessMessageMixin, DeleteView):
+    success_url = reverse_lazy("interaction_list")
+    success_message = "Взаимодействие удалено."
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_object(self, queryset=None):
+        interaction = super().get_object(queryset)
+        if not self.request.user.is_superuser:
+            raise PermissionDenied
+        return interaction

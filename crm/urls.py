@@ -4,6 +4,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("interactions/", views.InteractionListView.as_view(), name="interaction_list"),
+    path("interactions/create/", views.InteractionCreateView.as_view(), name="interaction_create"),
+    path("interactions/<int:pk>/", views.InteractionDetailView.as_view(), name="interaction_detail"),
+    path("interactions/<int:pk>/edit/", views.InteractionUpdateView.as_view(), name="interaction_update"),
+    path("interactions/<int:pk>/delete/", views.InteractionDeleteView.as_view(), name="interaction_delete"),
     path("deals/kanban/", views.DealKanbanView.as_view(), name="deal_kanban"),
     path("deals/<int:pk>/change-stage/", views.DealChangeStageView.as_view(), name="deal_change_stage"),
     path("deals/", views.DealListView.as_view(), name="deal_list"),

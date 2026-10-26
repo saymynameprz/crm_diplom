@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Client, ClientRequest, Task, Deal
+from .models import Client, ClientRequest, Task, Deal, ClientInteraction
 
 
 class ClientForm(forms.ModelForm):
@@ -116,3 +116,32 @@ class DealForm(forms.ModelForm):
 class DealStageForm(forms.Form):
     stage = forms.ChoiceField(label="Этап", choices=Deal.Stage.choices)
     expected_updated_at = forms.DateTimeField(label="Версия карточки", widget=forms.HiddenInput)
+
+
+class ClientInteractionForm(forms.ModelForm):
+    class Meta:
+        model = ClientInteraction
+        fields = ["client", "interaction_type", "subject", "description", "occurred_at"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 5}),
+            "occurred_at": forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}),
+        }
+        help_texts = {"occurred_at": "Дата и время UTC. Только состоявшиеся события; будущая дата запрещена."}
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        # All clients are shared by authenticated users under the existing client policy.
+        self.fields["client"].queryset = Client.objects.order_by("full_name", "pk")
+
+    def save(self, commit=True):
+        if self.instance._state.adding:
+            self.instance.created_by = self.user
+        return super().save(commit=commit)
+
+
+class InteractionFilterForm(forms.Form):
+    q = forms.CharField(label="Поиск по теме или клиенту", required=False, max_length=200)
+    interaction_type = forms.ChoiceField(label="Тип", required=False, choices=[("", "Все типы"), *ClientInteraction.Type.choices])
+    client = forms.ModelChoiceField(label="Клиент", required=False, queryset=Client.objects.order_by("full_name", "pk"), empty_label="Все клиенты")
+    sort = forms.ChoiceField(label="Порядок", required=False, initial="newest", choices=[("newest", "Сначала последние"), ("oldest", "Сначала ранние")])

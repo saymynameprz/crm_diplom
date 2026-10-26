@@ -1,0 +1,25 @@
+{% extends "crm/base.html" %}
+{% block title %}История взаимодействий{% endblock %}
+{% block card_class %}wide{% endblock %}
+{% block content %}
+<h1>История взаимодействий</h1>
+<p><a class="button" href="{% url 'interaction_create' %}">Добавить взаимодействие</a></p>
+<form method="get" class="filters">
+    {{ filter_form.as_p }}
+    <div class="actions"><button type="submit">Применить</button><a href="{% url 'interaction_list' %}">Сбросить</a></div>
+</form>
+<ol class="client-list" aria-label="Записи взаимодействий">
+{% for interaction in interactions %}
+    <li><h2><a href="{{ interaction.get_absolute_url }}">{{ interaction.subject }}</a></h2>
+    <p>{{ interaction.get_interaction_type_display }} · <time datetime="{{ interaction.occurred_at|date:'c' }}">{{ interaction.occurred_at|date:"d.m.Y H:i" }} UTC</time></p>
+    <p>Клиент: <a href="{{ interaction.client.get_absolute_url }}">{{ interaction.client }}</a><br>Автор: {{ interaction.created_by }}</p></li>
+{% empty %}<li>Доступных взаимодействий не найдено.</li>{% endfor %}
+</ol>
+{% if is_paginated %}
+<nav class="pagination" aria-label="Страницы истории">
+    {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
+    <span>Страница {{ page_obj.number }} из {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

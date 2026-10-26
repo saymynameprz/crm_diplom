@@ -1,0 +1,10 @@
+{% extends "crm/base.html" %}
+{% block title %}{% if object %}Редактирование взаимодействия{% else %}Новое взаимодействие{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if object %}Редактирование взаимодействия{% else %}Новое взаимодействие{% endif %}</h1>
+<p>Запишите состоявшееся событие. Планируемые события оформляйте как задачи.</p>
+<form method="post">
+    {% csrf_token %}{{ form.as_p }}
+    <div class="actions"><button type="submit">Сохранить</button><a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'interaction_list' %}{% endif %}">Отмена</a></div>
+</form>
+{% endblock %}

@@ -1,0 +1,10 @@
+Filled after-6C SQLite copy upgrade: clients/requests/tasks/deals unchanged; history table initially empty OK.
+HTTP admin/two managers: four types/server authorship, forged metadata, CSRF, validation, scoped URLs/search/client history, protected client, admin edit/delete and unchanged old records OK.
+Chromium 154.0.8037.57
+Chromium 1440px history: combined filters/pagination, scoped client top10, create/future error/keyboard/edit, escaped text, admin cancel/delete, long names/no overflow OK.
+Chromium 1280px history: combined filters/pagination, scoped client top10, create/future error/keyboard/edit, escaped text, admin cancel/delete, long names/no overflow OK.
+Chromium 768px history: combined filters/pagination, scoped client top10, create/future error/keyboard/edit, escaped text, admin cancel/delete, long names/no overflow OK.
+Chromium 375px history: combined filters/pagination, scoped client top10, create/future error/keyboard/edit, escaped text, admin cancel/delete, long names/no overflow OK.
+Kanban JS=False: real two-view 409, refresh/fresh version, successful retry OK.
+Kanban JS=True: real two-view 409, refresh/fresh version, successful retry OK.
+No uncaught JavaScript errors or HTTP 5xx. Fictional database/server removed.
