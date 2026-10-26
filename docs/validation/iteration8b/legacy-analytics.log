@@ -1,0 +1,14 @@
+Creating test database for alias 'default'...
+.....................
+----------------------------------------------------------------------
+Ran 21 tests in 0.629s
+
+OK
+Destroying test database for alias 'default'...
+Found 21 test(s).
+System check identified no issues (0 silenced).
+Exception ignored in: <generator object cursor_iter at 0x7ffa041f6ac0>
+Traceback (most recent call last):
+  File "/workspace/venvs/crm_diplom/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 2174, in cursor_iter
+    cursor.close()
+sqlite3.ProgrammingError: Cannot operate on a closed database.

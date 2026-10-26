@@ -24,6 +24,7 @@ from .models import Client, ClientRequest, Task, Deal, ClientInteraction
 from .services import AutomationError, create_request_with_task
 from .kanban import load_columns
 from .analytics import build_report
+from .analytics_presentation import present_report
 
 logger = logging.getLogger(__name__)
 
@@ -513,4 +514,5 @@ def analytics(request):
     at = timezone.now()
     form = AnalyticsPeriodForm(request.GET if request.GET else {"period": "all"}, at=at)
     period = form.selected_period() if form.is_valid() else None
-    return render(request, "crm/analytics.html", {"form": form, "report": build_report(request.user, period, at)})
+    report = build_report(request.user, period, at)
+    return render(request, "crm/analytics.html", {"form": form, "report": report, "charts": present_report(report)})

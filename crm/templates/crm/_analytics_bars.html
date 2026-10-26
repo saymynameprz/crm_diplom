@@ -1,0 +1,8 @@
+<ul class="analytics-bars">
+{% for row in chart.rows %}
+    <li data-category="{{ row.value }}">
+        <div class="analytics-bar-heading"><span>{{ row.label }}</span><span class="analytics-bar-number">{{ row.count }} · {% if row.percentage is None %}доля не определена{% else %}{{ row.percentage|floatformat:"1" }}%{% endif %}</span></div>
+        <div class="analytics-track" aria-hidden="true"><span class="analytics-fill analytics-fill--{{ row.value }}" style="width: {{ row.width }}%"></span></div>
+    </li>
+{% endfor %}
+</ul>
