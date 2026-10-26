@@ -111,3 +111,7 @@ class DealForm(forms.ModelForm):
             if not self.user.is_superuser:
                 self.instance.assigned_to = self.user
         return super().save(commit=commit)
+
+
+class DealStageForm(forms.Form):
+    stage = forms.ChoiceField(label="Этап", choices=Deal.Stage.choices)

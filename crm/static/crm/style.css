@@ -55,3 +55,15 @@ textarea { resize: vertical; }
 .stage-proposal { background: #fff2cf; color: #6e4700; }
 .stage-won { background: #e3f4e8; color: #215c34; }
 .stage-lost { background: #f6e7e7; color: #812c2c; }
+.kanban-shell { max-width: none; min-width: 0; padding: 1rem; }
+.kanban-scroll { overflow-x: auto; max-width: 100%; padding-bottom: 1rem; }
+.kanban-grid { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: .75rem; align-items: start; }
+.kanban-column { min-width: 0; padding: .75rem; background: #f1f4f9; border: 1px solid #dbe2ed; border-radius: .6rem; }
+.kanban-column h2 { font-size: 1rem; margin: 0; overflow-wrap: anywhere; }
+.column-count { margin: .6rem 0; font-weight: 600; }
+.kanban-deal { min-width: 0; padding: .75rem; margin-bottom: .75rem; border: 1px solid #dbe2ed; border-radius: .5rem; background: white; overflow-wrap: anywhere; }
+.kanban-deal h3 { font-size: 1rem; margin: 0 0 .75rem; }
+.kanban-deal dd { margin-bottom: .6rem; font-size: .9rem; }
+.kanban-deal label { font-size: .9rem; }
+.kanban-deal select { padding: .5rem .25rem; }
+.kanban-deal button { margin-top: .6rem; padding: .6rem .7rem; font-size: .9rem; }

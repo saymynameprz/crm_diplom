@@ -8,12 +8,13 @@ from django.db import DatabaseError
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
+from django.views.generic.detail import SingleObjectMixin
 
-from .forms import ClientForm, ClientRequestForm, TaskForm, DealForm
+from .forms import ClientForm, ClientRequestForm, TaskForm, DealForm, DealStageForm
 from .models import Client, ClientRequest, Task, Deal
 from .services import AutomationError, create_request_with_task
 
@@ -336,3 +337,36 @@ class DealDeleteView(DealAccessMixin, UserPassesTestMixin, SuccessMessageMixin, 
 
     def test_func(self):
         return self.request.user.is_superuser
+
+
+class DealKanbanView(LoginRequiredMixin, TemplateView):
+    template_name = "crm/deal_kanban.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        deals = Deal.objects.visible_to(self.request.user)
+        counts = dict(deals.order_by().values_list("stage").annotate(total=Count("pk")))
+        columns = []
+        for value, label in Deal.Stage.choices:
+            cards = list(deals.filter(stage=value).select_related("client", "assigned_to").order_by("-created_at", "-pk")[:20])
+            columns.append({"stage": value, "label": label, "count": counts.get(value, 0), "deals": cards})
+        context.update(columns=columns, stage_choices=Deal.Stage.choices)
+        return context
+
+
+class DealChangeStageView(DealAccessMixin, SingleObjectMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        deal = self.get_object()
+        form = DealStageForm(request.POST)
+        if not form.is_valid():
+            return render(request, "crm/deal_stage_error.html", {"form": form, "deal": deal}, status=400)
+        stage = form.cleaned_data["stage"]
+        if deal.stage != stage:
+            deal.stage = stage
+            deal.save(update_fields=["stage", "updated_at"])
+            messages.success(request, "Сделка перемещена.")
+        else:
+            messages.success(request, "Сделка уже находится на выбранном этапе.")
+        return redirect("deal_kanban")

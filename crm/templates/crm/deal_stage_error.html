@@ -1,0 +1,11 @@
+{% extends "crm/base.html" %}
+{% block title %}Не удалось изменить этап{% endblock %}
+{% block content %}
+<h1>Не удалось изменить этап</h1>
+<p class="error" role="alert">Выберите допустимый этап. Сделка не изменена.</p>
+<form method="post" action="{% url 'deal_change_stage' deal.pk %}">
+{% csrf_token %}{{ form.as_p }}
+<button type="submit">Переместить</button>
+</form>
+<p><a href="{% url 'deal_kanban' %}">Вернуться на доску</a></p>
+{% endblock %}

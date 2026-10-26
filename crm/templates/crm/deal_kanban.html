@@ -1,0 +1,38 @@
+{% extends "crm/base.html" %}
+{% block title %}Воронка продаж{% endblock %}
+{% block card_class %}kanban-shell{% endblock %}
+{% block content %}
+<h1>Воронка продаж</h1>
+<p><a href="{% url 'deal_list' %}">Список сделок</a> · <a href="{% url 'deal_create' %}">Добавить сделку</a></p>
+<p id="kanban-help">Выберите этап и нажмите «Переместить». На узком экране прокручивайте доску по горизонтали. С клавиатуры: Tab для выбора формы, стрелки для прокрутки области доски.</p>
+<div class="kanban-scroll" role="region" aria-label="Доска сделок" aria-describedby="kanban-help" tabindex="0">
+<div class="kanban-grid">
+{% for column in columns %}
+<section class="kanban-column" data-stage="{{ column.stage }}" aria-labelledby="column-{{ column.stage }}">
+    <h2 id="column-{{ column.stage }}"><span class="status stage-{{ column.stage }}">{{ column.label }}</span></h2>
+    <p class="column-count">Сделок: {{ column.count }}</p>
+    {% for deal in column.deals %}
+    <article class="kanban-deal" data-deal-id="{{ deal.pk }}">
+        <h3><a href="{{ deal.get_absolute_url }}">№{{ deal.pk }} · {{ deal.title }}</a></h3>
+        <dl>
+            <dt>Клиент</dt><dd><a href="{{ deal.client.get_absolute_url }}">{{ deal.client }}</a></dd>
+            <dt>Сумма</dt><dd>{{ deal.amount|floatformat:"2" }} ₽</dd>
+            <dt>Ответственный</dt><dd>{{ deal.assigned_to|default:"Не назначен" }}</dd>
+            {% if deal.expected_close_date %}<dt>Планируемая дата закрытия</dt><dd>{{ deal.expected_close_date|date:"d.m.Y" }}</dd>{% endif %}
+        </dl>
+        <form method="post" action="{% url 'deal_change_stage' deal.pk %}">
+            {% csrf_token %}
+            <label for="deal-stage-{{ deal.pk }}">Этап сделки №{{ deal.pk }}</label>
+            <select name="stage" id="deal-stage-{{ deal.pk }}">
+                {% for value, label in stage_choices %}<option value="{{ value }}" {% if deal.stage == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <button type="submit" aria-label="Переместить сделку №{{ deal.pk }}">Переместить</button>
+        </form>
+    </article>
+    {% empty %}<p>В этом этапе сделок нет.</p>{% endfor %}
+    {% if column.count > 20 %}<p><a href="{% url 'deal_list' %}?stage={{ column.stage }}">Посмотреть все</a></p>{% endif %}
+</section>
+{% endfor %}
+</div>
+</div>
+{% endblock %}

@@ -4,6 +4,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("deals/kanban/", views.DealKanbanView.as_view(), name="deal_kanban"),
+    path("deals/<int:pk>/change-stage/", views.DealChangeStageView.as_view(), name="deal_change_stage"),
     path("deals/", views.DealListView.as_view(), name="deal_list"),
     path("deals/create/", views.DealCreateView.as_view(), name="deal_create"),
     path("deals/<int:pk>/", views.DealDetailView.as_view(), name="deal_detail"),

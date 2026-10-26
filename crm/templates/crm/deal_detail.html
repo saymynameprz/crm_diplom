@@ -14,5 +14,6 @@
 </dl>
 <div class="actions"><a href="{% url 'deal_update' deal.pk %}">Редактировать</a>
 {% if user.is_superuser %}<a href="{% url 'deal_delete' deal.pk %}">Удалить</a>{% endif %}
-<a href="{% url 'deal_list' %}">К списку сделок</a></div>
+<a href="{% url 'deal_list' %}">К списку сделок</a>
+<a href="{% url 'deal_kanban' %}">Воронка продаж</a></div>
 {% endblock %}

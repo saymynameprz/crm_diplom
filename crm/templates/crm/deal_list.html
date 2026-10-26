@@ -3,6 +3,7 @@
 {% block card_class %}wide{% endblock %}
 {% block content %}
 <h1>Сделки</h1>
+<p><a href="{% url 'deal_kanban' %}">Воронка продаж</a></p>
 <p><a class="button" href="{% url 'deal_create' %}">Добавить сделку</a></p>
 <form method="get" class="filters">
 <label for="q">Поиск по сделке или клиенту</label><input type="search" name="q" id="q" value="{{ query }}">
