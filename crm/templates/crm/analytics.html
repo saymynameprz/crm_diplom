@@ -1,0 +1,53 @@
+{% extends "crm/base.html" %}
+{% block title %}Аналитика CRM{% endblock %}
+{% block card_class %}wide{% endblock %}
+{% block content %}
+<h1>Аналитика CRM</h1>
+<p>Расчёт на {{ report.at|date:"d.m.Y H:i:s" }} UTC.</p>
+<form method="get" class="filters">
+    {{ form.as_p }}
+    <p>Даты нужны для произвольного периода. Начальная дата включена с 00:00 UTC, конечная — до 00:00 следующего дня. Будущие даты запрещены; события позже момента расчёта не включаются.</p>
+    <div class="actions"><button type="submit">Рассчитать</button><a href="{% url 'analytics' %}">Всё время</a></div>
+</form>
+<section aria-labelledby="period-metrics">
+<h2 id="period-metrics">Сделки и взаимодействия за период</h2>
+<p>Сделки отбираются по дате создания (created_at), взаимодействия — по времени события (occurred_at). Этапы сделок показывают их текущее состояние: историю смены этапов и дату закрытия система не хранит.</p>
+{% if report.deals is not None %}
+<div class="actions">
+    <dl class="card summary"><dt>Всего сделок</dt><dd id="analytics-deal-total">{{ report.deals.total }}</dd></dl>
+    <dl class="card summary"><dt>Открытые сделки</dt><dd id="analytics-deal-open">{{ report.deals.open }}</dd></dl>
+    <dl class="card summary"><dt>Закрытые сделки</dt><dd id="analytics-deal-closed">{{ report.deals.closed }}</dd></dl>
+</div>
+<p>Открытые: новые, контакт, предложение. Закрытые: успешные и проигранные.</p>
+{% if report.deals.invalid_count %}<p class="error" role="alert">Обнаружены сделки с некорректным этапом: {{ report.deals.invalid_count }}. Они включены в общий итог, но не в открытые/закрытые. Конверсия недоступна.</p>{% endif %}
+<div class="request-table">
+<table aria-label="Распределение сделок по этапам">
+    <thead><tr><th scope="col">Этап</th><th scope="col">Количество</th></tr></thead>
+    <tbody>{% for row in report.deals.rows %}<tr><td data-label="Этап">{{ row.label }}</td><td data-label="Количество" id="analytics-stage-{{ row.value }}">{{ row.count }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+<h3>Конверсия закрытых сделок</h3>
+<p id="analytics-conversion">{% if report.deals.invalid_count %}Недоступна{% elif report.deals.conversion is None %}Нет данных{% else %}{{ report.deals.conversion|floatformat:"1" }}%{% endif %}</p>
+<p>Формула: успешные / (успешные + проигранные) × 100. Это текущее состояние сделок, созданных в выбранный период, а не сделки, закрытые за этот период. Округление — до одного знака.</p>
+<h3>Сумма успешно завершённых сделок</h3>
+{% if report.deals.won_amount is None %}
+<p class="error" role="alert" id="analytics-won-amount">Финансовый показатель не может быть достоверно вычислен. Обратитесь к администратору для проверки сумм сделок.</p>
+{% else %}<p id="analytics-won-amount">{{ report.deals.won_amount|floatformat:"2" }} ₽</p>{% endif %}
+<p>Сумма только успешных сделок, созданных за период. Это не фактически полученная выручка: платежи система не хранит.</p>
+<h3>Взаимодействия</h3>
+<p>Всего записей: <span id="analytics-interaction-total">{{ report.interactions.total }}</span>. Записи о письмах не означают отправку писем системой.</p>
+{% if report.interactions.invalid_count %}<p class="error" role="alert">Есть записи с некорректным типом: {{ report.interactions.invalid_count }}. Они включены в общий итог, но отсутствуют в распределении по типам.</p>{% endif %}
+<dl>{% for row in report.interactions.rows %}<dt>{{ row.label }}</dt><dd id="analytics-type-{{ row.value }}">{{ row.count }}</dd>{% endfor %}</dl>
+{% else %}<p class="error" role="alert">Показатели за период не рассчитаны. Исправьте ошибки фильтра.</p>{% endif %}
+</section>
+<section aria-labelledby="current-workload">
+<h2 id="current-workload">Текущее состояние заявок и задач</h2>
+<p>На момент расчёта, независимо от периода сделок и взаимодействий. Это текущая просрочка, а не история просрочек.</p>
+<dl class="summary">
+    <dt>Доступные заявки</dt><dd id="analytics-request-total">{{ report.workload.requests.total }}</dd>
+    <dt>Доступные задачи</dt><dd id="analytics-task-total">{{ report.workload.tasks.total }}</dd>
+    <dt>Просроченные заявки</dt><dd id="analytics-request-overdue">{{ report.workload.requests.overdue }}</dd>
+    <dt>Просроченные задачи</dt><dd id="analytics-task-overdue">{{ report.workload.tasks.overdue }}</dd>
+</dl>
+</section>
+{% endblock %}

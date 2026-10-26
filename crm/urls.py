@@ -4,6 +4,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("analytics/", views.analytics, name="analytics"),
     path("interactions/", views.InteractionListView.as_view(), name="interaction_list"),
     path("interactions/create/", views.InteractionCreateView.as_view(), name="interaction_create"),
     path("interactions/<int:pk>/", views.InteractionDetailView.as_view(), name="interaction_detail"),

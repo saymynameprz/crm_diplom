@@ -1,6 +1,9 @@
+from datetime import timezone
+
 from django import forms
 from django.contrib.auth import get_user_model
 
+from .analytics import period_bounds
 from .models import Client, ClientRequest, Task, Deal, ClientInteraction
 
 
@@ -145,3 +148,30 @@ class InteractionFilterForm(forms.Form):
     interaction_type = forms.ChoiceField(label="Тип", required=False, choices=[("", "Все типы"), *ClientInteraction.Type.choices])
     client = forms.ModelChoiceField(label="Клиент", required=False, queryset=Client.objects.order_by("full_name", "pk"), empty_label="Все клиенты")
     sort = forms.ChoiceField(label="Порядок", required=False, initial="newest", choices=[("newest", "Сначала последние"), ("oldest", "Сначала ранние")])
+
+
+class AnalyticsPeriodForm(forms.Form):
+    period = forms.ChoiceField(label="Период", initial="all", choices=[("all", "Всё время"), ("30d", "Последние 30 суток"), ("custom", "Произвольный период")])
+    start_date = forms.DateField(label="Начальная дата UTC", required=False, input_formats=["%Y-%m-%d"], widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
+    end_date = forms.DateField(label="Конечная дата UTC", required=False, input_formats=["%Y-%m-%d"], widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
+
+    def __init__(self, *args, at, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.at = at
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("period") == "custom":
+            for field in ("start_date", "end_date"):
+                value = cleaned.get(field)
+                if not value and field not in self.errors:
+                    self.add_error(field, "Укажите обе даты периода.")
+                elif value and value > self.at.astimezone(timezone.utc).date():
+                    self.add_error(field, "Дата не может быть позже сегодняшней даты UTC.")
+            start, end = cleaned.get("start_date"), cleaned.get("end_date")
+            if start and end and end < start:
+                self.add_error("end_date", "Конечная дата не может быть раньше начальной.")
+        return cleaned
+
+    def selected_period(self):
+        return period_bounds(self.cleaned_data["period"], self.cleaned_data.get("start_date"), self.cleaned_data.get("end_date"), self.at)
