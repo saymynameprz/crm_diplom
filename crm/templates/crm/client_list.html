@@ -1,0 +1,38 @@
+{% extends "crm/base.html" %}
+{% block title %}Клиенты{% endblock %}
+{% block card_class %}wide{% endblock %}
+{% block content %}
+<h1>Клиенты</h1>
+<p><a class="button" href="{% url 'client_create' %}">Добавить клиента</a></p>
+<form method="get" class="filters">
+    <div><label for="q">Поиск</label><input type="search" id="q" name="q" value="{{ query }}" placeholder="Имя, телефон, email, организация"></div>
+    <div><label for="company">Организация</label><select id="company" name="company">
+        <option value="">Все клиенты</option>
+        <option value="yes" {% if company_filter == 'yes' %}selected{% endif %}>С организацией</option>
+        <option value="no" {% if company_filter == 'no' %}selected{% endif %}>Без организации</option>
+    </select></div>
+    <div><label for="sort">Дата создания</label><select id="sort" name="sort">
+        <option value="newest">Сначала новые</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
+    </select></div>
+    <div class="actions"><button type="submit">Найти</button><a href="{% url 'client_list' %}">Сбросить</a></div>
+</form>
+<ul class="client-list">
+{% for client in clients %}
+    <li><h2><a href="{{ client.get_absolute_url }}">{{ client.full_name }}</a></h2>
+        <p>{{ client.company|default:"Без организации" }} · {{ client.phone|default:"Телефон не указан" }}</p>
+        <p>{{ client.email|default:"Email не указан" }}</p>
+        <small>Создан: {{ client.created_at|date:"d.m.Y H:i" }}</small>
+    </li>
+{% empty %}
+    <li>{% if query or company_filter %}Клиенты не найдены. Измените условия поиска.{% else %}Клиентов пока нет. Добавьте первого клиента.{% endif %}</li>
+{% endfor %}
+</ul>
+{% if is_paginated %}
+<nav class="pagination" aria-label="Страницы клиентов">
+    {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
+    <span>Страница {{ page_obj.number }} из {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

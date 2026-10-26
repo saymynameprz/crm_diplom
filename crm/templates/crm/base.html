@@ -9,6 +9,15 @@
 </head>
 <body>
     <header class="brand">Дипломная CRM</header>
-    <main class="card">{% block content %}{% endblock %}</main>
+    {% if user.is_authenticated %}
+    <nav class="navigation" aria-label="Основная навигация">
+        <a href="{% url 'home' %}">Главная</a>
+        <a href="{% url 'client_list' %}">Клиенты</a>
+    </nav>
+    {% endif %}
+    <main class="card {% block card_class %}{% endblock %}">
+        {% if messages %}<div aria-live="polite">{% for message in messages %}<p class="notice">{{ message }}</p>{% endfor %}</div>{% endif %}
+        {% block content %}{% endblock %}
+    </main>
 </body>
 </html>

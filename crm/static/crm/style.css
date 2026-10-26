@@ -14,3 +14,21 @@ a { color: #214fa0; }
 dt { color: #536580; font-size: .9rem; }
 dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
 @media (max-width: 360px) { .card { padding: 1.25rem; } }
+.navigation { max-width: 54rem; margin: 0 auto 1rem; display: flex; flex-wrap: wrap; gap: 1rem; }
+.wide { max-width: 54rem; }
+.card h1, .card p, .client-list { overflow-wrap: anywhere; }
+select, textarea { width: 100%; min-width: 0; padding: .75rem; border: 1px solid #687a95; border-radius: .4rem; font: inherit; }
+textarea { resize: vertical; }
+.filters { padding-bottom: 1.5rem; border-bottom: 1px solid #dbe2ed; }
+.actions, .pagination { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.actions { margin-top: 1.25rem; }
+.actions button { margin-top: 0; }
+.button { display: inline-block; padding: .8rem 1rem; background: #214fa0; color: white; border-radius: .4rem; text-decoration: none; }
+.danger { background: #982828; }
+.notice { padding: .8rem; background: #e9f6ed; color: #1a5731; border-radius: .4rem; }
+.errorlist { color: #8c2020; padding-left: 1.25rem; }
+.client-list { padding: 0; list-style: none; }
+.client-list li { padding: 1rem 0; border-bottom: 1px solid #dbe2ed; }
+.client-list h2 { font-size: 1.15rem; margin: 0; }
+.client-list p { margin: .5rem 0; }
+.pagination { margin-top: 1.5rem; }

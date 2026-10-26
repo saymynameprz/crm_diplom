@@ -1,0 +1,18 @@
+{% extends "crm/base.html" %}
+{% block title %}Карточка клиента{% endblock %}
+{% block content %}
+<h1>{{ client.full_name }}</h1>
+<dl>
+    <dt>Телефон</dt><dd>{{ client.phone|default:"Не указан" }}</dd>
+    <dt>Email</dt><dd>{{ client.email|default:"Не указан" }}</dd>
+    <dt>Организация</dt><dd>{{ client.company|default:"Не указана" }}</dd>
+    <dt>Примечание</dt><dd>{{ client.notes|default:"Нет примечания"|linebreaksbr }}</dd>
+    <dt>Создан</dt><dd>{{ client.created_at|date:"d.m.Y H:i" }}</dd>
+    <dt>Изменён</dt><dd>{{ client.updated_at|date:"d.m.Y H:i" }}</dd>
+</dl>
+<div class="actions">
+    <a href="{% url 'client_update' client.pk %}">Редактировать</a>
+    {% if user.is_superuser %}<a href="{% url 'client_delete' client.pk %}">Удалить</a>{% endif %}
+    <a href="{% url 'client_list' %}">К списку</a>
+</div>
+{% endblock %}
