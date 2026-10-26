@@ -1,0 +1,8 @@
+<section class="kanban-column" data-stage="{{ column.stage }}" aria-labelledby="column-{{ column.stage }}">
+    <h2 id="column-{{ column.stage }}"><span class="status stage-{{ column.stage }}">{{ column.label }}</span></h2>
+    <p class="column-count">Сделок: {{ column.count }}</p>
+    {% for deal in column.deals %}
+    {% include "crm/_kanban_card.html" %}
+    {% empty %}<p>В этом этапе сделок нет.</p>{% endfor %}
+    {% if column.count > 20 %}<p><a href="{% url 'deal_list' %}?stage={{ column.stage }}">Посмотреть все</a></p>{% endif %}
+</section>

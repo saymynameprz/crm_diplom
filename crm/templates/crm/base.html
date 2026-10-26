@@ -22,5 +22,6 @@
         {% if messages %}<div aria-live="polite">{% for message in messages %}<p class="notice">{{ message }}</p>{% endfor %}</div>{% endif %}
         {% block content %}{% endblock %}
     </main>
+{% block scripts %}{% endblock %}
 </body>
 </html>

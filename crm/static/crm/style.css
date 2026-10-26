@@ -67,3 +67,18 @@ textarea { resize: vertical; }
 .kanban-deal label { font-size: .9rem; }
 .kanban-deal select { padding: .5rem .25rem; }
 .kanban-deal button { margin-top: .6rem; padding: .6rem .7rem; font-size: .9rem; }
+.kanban-drag-handle { display: block; color: #536580; font-size: .85rem; cursor: grab; margin-bottom: .5rem; }
+.kanban-drag-handle[hidden] { display: none; }
+.kanban-deal.is-dragging { opacity: .55; }
+.kanban-column.is-drop-target { outline: 3px solid #31518a; outline-offset: -3px; background: #e8efff; }
+.kanban-deal.is-saving { opacity: .65; cursor: progress; }
+#kanban-status:empty { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+    .kanban-deal { transition: opacity .1s; }
+}
+.kanban-feedback { pointer-events: none; position: fixed; left: 1rem; right: 1rem; bottom: 1rem; max-width: 36rem; z-index: 20; padding: .9rem; border: 1px solid #687a95; border-radius: .5rem; background: white; box-shadow: 0 4px 20px #172b4d26; }
+.kanban-feedback[hidden] { display: none; }
+.kanban-feedback p { margin: 0 0 .4rem; }
+.kanban-feedback button { margin: .25rem 0 0; padding: .35rem .6rem; font-size: .85rem; }
+
+.kanban-feedback a, .kanban-feedback button { pointer-events: auto; }

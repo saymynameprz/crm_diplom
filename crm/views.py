@@ -7,16 +7,19 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db import DatabaseError
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.template.loader import render_to_string
+from django.views.csrf import csrf_failure as default_csrf_failure
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 
 from .forms import ClientForm, ClientRequestForm, TaskForm, DealForm, DealStageForm
 from .models import Client, ClientRequest, Task, Deal
 from .services import AutomationError, create_request_with_task
+from .kanban import load_columns
 
 logger = logging.getLogger(__name__)
 
@@ -344,29 +347,73 @@ class DealKanbanView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        deals = Deal.objects.visible_to(self.request.user)
-        counts = dict(deals.order_by().values_list("stage").annotate(total=Count("pk")))
-        columns = []
-        for value, label in Deal.Stage.choices:
-            cards = list(deals.filter(stage=value).select_related("client", "assigned_to").order_by("-created_at", "-pk")[:20])
-            columns.append({"stage": value, "label": label, "count": counts.get(value, 0), "deals": cards})
-        context.update(columns=columns, stage_choices=Deal.Stage.choices)
+        context.update(columns=load_columns(self.request.user), stage_choices=Deal.Stage.choices)
         return context
+
+
+
+def wants_kanban_json(request):
+    return any(part.split(";")[0].strip().lower() == "application/json" for part in request.headers.get("Accept", "").split(","))
+
+
+def kanban_error(message, status):
+    return JsonResponse({"success": False, "message": message}, status=status)
+
+
+def csrf_failure(request, reason=""):
+    match = getattr(request, "resolver_match", None)
+    if match and match.url_name == "deal_change_stage" and wants_kanban_json(request):
+        return kanban_error("Проверка CSRF не пройдена. Обновите страницу и повторите действие.", 403)
+    return default_csrf_failure(request, reason=reason)
 
 
 class DealChangeStageView(DealAccessMixin, SingleObjectMixin, View):
     http_method_names = ["post"]
 
+    def handle_no_permission(self):
+        if wants_kanban_json(self.request):
+            return kanban_error("Сессия истекла. Войдите в систему и обновите доску.", 401)
+        return super().handle_no_permission()
+
+    def http_method_not_allowed(self, request, *args, **kwargs):
+        if wants_kanban_json(request):
+            response = kanban_error("Разрешён только POST.", 405)
+            response["Allow"] = "POST"
+            return response
+        return super().http_method_not_allowed(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
+        try:
+            return self.change_stage(request)
+        except Http404:
+            if wants_kanban_json(request):
+                return kanban_error("Сделка не найдена или недоступна.", 404)
+            raise
+        except Exception:
+            if not wants_kanban_json(request):
+                raise
+            logger.exception("Ошибка JSON-операции смены этапа")
+            return kanban_error("Не удалось подтвердить результат. Обновите доску перед повтором.", 500)
+
+    def change_stage(self, request):
         deal = self.get_object()
         form = DealStageForm(request.POST)
         if not form.is_valid():
+            if wants_kanban_json(request):
+                return kanban_error("Выберите допустимый этап. Сделка не изменена.", 400)
             return render(request, "crm/deal_stage_error.html", {"form": form, "deal": deal}, status=400)
+        previous = deal.stage
         stage = form.cleaned_data["stage"]
-        if deal.stage != stage:
+        message = "Сделка уже находится на выбранном этапе."
+        if previous != stage:
             deal.stage = stage
             deal.save(update_fields=["stage", "updated_at"])
-            messages.success(request, "Сделка перемещена.")
-        else:
-            messages.success(request, "Сделка уже находится на выбранном этапе.")
+            message = "Сделка перемещена."
+        if wants_kanban_json(request):
+            columns = load_columns(request.user, {previous, stage})
+            fragments = [{"stage": column["stage"], "count": column["count"],
+                          "html": render_to_string("crm/_kanban_column.html", {"column": column, "stage_choices": Deal.Stage.choices}, request=request)}
+                         for column in columns]
+            return JsonResponse({"success": True, "deal_id": deal.pk, "stage": stage, "message": message, "columns": fragments})
+        messages.success(request, message)
         return redirect("deal_kanban")

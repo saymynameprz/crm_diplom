@@ -1,0 +1,18 @@
+    <article class="kanban-deal" data-deal-id="{{ deal.pk }}" data-change-url="{% url 'deal_change_stage' deal.pk %}">
+        <span class="kanban-drag-handle" hidden>Перетащить</span>
+        <h3><a href="{{ deal.get_absolute_url }}">№{{ deal.pk }} · {{ deal.title }}</a></h3>
+        <dl>
+            <dt>Клиент</dt><dd><a href="{{ deal.client.get_absolute_url }}">{{ deal.client }}</a></dd>
+            <dt>Сумма</dt><dd>{{ deal.amount|floatformat:"2" }} ₽</dd>
+            <dt>Ответственный</dt><dd>{{ deal.assigned_to|default:"Не назначен" }}</dd>
+            {% if deal.expected_close_date %}<dt>Планируемая дата закрытия</dt><dd>{{ deal.expected_close_date|date:"d.m.Y" }}</dd>{% endif %}
+        </dl>
+        <form method="post" action="{% url 'deal_change_stage' deal.pk %}">
+            {% csrf_token %}
+            <label for="deal-stage-{{ deal.pk }}">Этап сделки №{{ deal.pk }}</label>
+            <select name="stage" id="deal-stage-{{ deal.pk }}">
+                {% for value, label in stage_choices %}<option value="{{ value }}" {% if deal.stage == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <button type="submit" aria-label="Переместить сделку №{{ deal.pk }}">Переместить</button>
+        </form>
+    </article>
