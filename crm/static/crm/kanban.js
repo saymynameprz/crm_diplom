@@ -78,7 +78,7 @@
             const response = await fetch(url.href, {
                 method: "POST", credentials: "same-origin", signal: controller.signal,
                 headers: {"Accept": "application/json", "X-CSRFToken": csrf},
-                body: new URLSearchParams({stage: target})
+                body: new URLSearchParams({stage: target, expected_updated_at: move.card.querySelector("[name=expected_updated_at]").value})
             });
             if (response.redirected || !response.headers.get("Content-Type")?.includes("application/json")) {
                 uncertain = true;

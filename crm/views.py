@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -400,15 +401,25 @@ class DealChangeStageView(DealAccessMixin, SingleObjectMixin, View):
         form = DealStageForm(request.POST)
         if not form.is_valid():
             if wants_kanban_json(request):
-                return kanban_error("Выберите допустимый этап. Сделка не изменена.", 400)
+                return kanban_error("Проверьте этап и версию карточки. Обновите доску. Сделка не изменена.", 400)
             return render(request, "crm/deal_stage_error.html", {"form": form, "deal": deal}, status=400)
+        expected = form.cleaned_data["expected_updated_at"]
+        if expected != deal.updated_at:
+            return self.stage_conflict(request)
         previous = deal.stage
         stage = form.cleaned_data["stage"]
         message = "Сделка уже находится на выбранном этапе."
+        current = Deal.objects.visible_to(request.user).filter(pk=deal.pk, stage=previous, updated_at=expected)
         if previous != stage:
-            deal.stage = stage
-            deal.save(update_fields=["stage", "updated_at"])
+            # The ownership/version predicate is part of the atomic SQL UPDATE, including on SQLite.
+            changed = current.update(stage=stage, updated_at=max(timezone.now(), expected + timedelta(microseconds=1)))
+            if not changed:
+                self.get_object()  # Preserve generic 404 if ownership changed or the row disappeared.
+                return self.stage_conflict(request)
             message = "Сделка перемещена."
+        elif not current.exists():
+            self.get_object()
+            return self.stage_conflict(request)
         if wants_kanban_json(request):
             columns = load_columns(request.user, {previous, stage})
             fragments = [{"stage": column["stage"], "count": column["count"],
@@ -417,3 +428,9 @@ class DealChangeStageView(DealAccessMixin, SingleObjectMixin, View):
             return JsonResponse({"success": True, "deal_id": deal.pk, "stage": stage, "message": message, "columns": fragments})
         messages.success(request, message)
         return redirect("deal_kanban")
+
+    def stage_conflict(self, request):
+        message = "Сделка была изменена после загрузки карточки. Ваше изменение не сохранено. Обновите доску."
+        if wants_kanban_json(request):
+            return kanban_error(message, 409)
+        return render(request, "crm/deal_stage_conflict.html", {"message": message}, status=409)

@@ -30,6 +30,9 @@ class KanbanTests(TestCase):
     def url(self, deal=None):
         return reverse("deal_change_stage", kwargs={"pk": (deal or self.own).pk})
 
+    def version(self, deal=None):
+        return Deal.objects.get(pk=(deal or self.own).pk).updated_at.isoformat()
+
     def test_five_ordered_columns_manager_scope_and_counts(self):
         response = self.client.get(reverse("deal_kanban"))
         self.assertEqual(response.status_code, 200)
@@ -100,7 +103,7 @@ class KanbanTests(TestCase):
         for actor, target in ((self.manager, self.own), (self.admin, self.foreign), (self.admin, self.orphan)):
             self.client.force_login(actor)
             for stage in Deal.Stage.values:
-                response = self.client.post(self.url(target), {"stage": stage}, follow=True)
+                response = self.client.post(self.url(target), {"stage": stage, "expected_updated_at": self.version(target)}, follow=True)
                 self.assertRedirects(response, reverse("deal_kanban"))
                 target.refresh_from_db()
                 self.assertEqual(target.stage, stage)
@@ -109,7 +112,7 @@ class KanbanTests(TestCase):
 
     def test_new_won_contact_updates_counts_from_database(self):
         for stage in ("won", "contact"):
-            response = self.client.post(self.url(), {"stage": stage}, follow=True)
+            response = self.client.post(self.url(), {"stage": stage, "expected_updated_at": self.version()}, follow=True)
             self.assertContains(response, "Сделка перемещена.")
             self.own.refresh_from_db()
             self.assertEqual(self.own.stage, stage)
@@ -122,7 +125,7 @@ class KanbanTests(TestCase):
         before = Deal.objects.values().get(pk=self.own.pk)
         at = self.own.updated_at + timedelta(days=1)
         with patch("django.utils.timezone.now", return_value=at):
-            response = self.client.post(self.url(), {"stage": "won", "assigned_to": self.other.pk, "amount": "-100",
+            response = self.client.post(self.url(), {"stage": "won", "expected_updated_at": self.version(), "assigned_to": self.other.pk, "amount": "-100",
                 "client": 999999, "title": "Подмена", "description": "Подмена", "created_at": "2000-01-01", "updated_at": "2000-01-01",
                 "expected_close_date": "2000-01-01", "pk": self.foreign.pk, "id": self.foreign.pk})
         self.assertEqual(response.status_code, 302)
@@ -132,7 +135,7 @@ class KanbanTests(TestCase):
 
     def test_same_stage_is_noop_and_no_duplicate(self):
         before = Deal.objects.values().get(pk=self.own.pk)
-        response = self.client.post(self.url(), {"stage": "new"}, follow=True)
+        response = self.client.post(self.url(), {"stage": "new", "expected_updated_at": self.version()}, follow=True)
         self.assertContains(response, "уже находится на выбранном этапе")
         self.assertEqual(Deal.objects.values().get(pk=self.own.pk), before)
         self.assertEqual(Deal.objects.count(), 3)
@@ -140,7 +143,7 @@ class KanbanTests(TestCase):
     def test_invalid_and_missing_stage_400_without_mutation(self):
         before = list(Deal.objects.values())
         for data in ({}, {"stage": ""}, {"stage": "invalid", "amount": "0"}, {"stage": "<script>bad</script>"}):
-            response = self.client.post(self.url(), data)
+            response = self.client.post(self.url(), {"expected_updated_at": self.version(), **data})
             self.assertEqual(response.status_code, 400)
             self.assertContains(response, "Сделка не изменена", status_code=400)
             self.assertNotContains(response, "<script>", status_code=400)
@@ -176,12 +179,12 @@ class KanbanTests(TestCase):
         for data in ({"stage": "won"}, {"stage": "won", "csrfmiddlewaretoken": "x"*64}):
             self.assertEqual(browser.post(self.url(), data).status_code, 403)
             self.assertEqual(Deal.objects.values().get(pk=self.own.pk), before)
-        self.assertRedirects(browser.post(self.url(), {"stage": "won", "csrfmiddlewaretoken": browser.cookies["csrftoken"].value}), reverse("deal_kanban"))
+        self.assertRedirects(browser.post(self.url(), {"stage": "won", "expected_updated_at": self.version(), "csrfmiddlewaretoken": browser.cookies["csrftoken"].value}), reverse("deal_kanban"))
         self.own.refresh_from_db()
         self.assertEqual(self.own.stage, "won")
 
     def test_external_redirect_parameters_ignored(self):
-        response = self.client.post(self.url()+"?next=https://untrusted.example/", {"stage": "won", "next": "//untrusted.example/", "return_url": "https://untrusted.example/"})
+        response = self.client.post(self.url()+"?next=https://untrusted.example/", {"stage": "won", "expected_updated_at": self.version(), "next": "//untrusted.example/", "return_url": "https://untrusted.example/"})
         self.assertEqual(response.url, reverse("deal_kanban"))
 
     def test_reassignment_changes_cards_counts_and_mutation_access(self):
@@ -199,7 +202,7 @@ class KanbanTests(TestCase):
         board = self.client.get(reverse("deal_kanban"))
         self.assertContains(board, self.own.title)
         self.assertEqual(sum(c["count"] for c in board.context["columns"]), 2)
-        self.assertEqual(self.client.post(self.url(), {"stage": "won"}).status_code, 302)
+        self.assertEqual(self.client.post(self.url(), {"stage": "won", "expected_updated_at": self.version()}).status_code, 302)
 
     def test_long_titles_escape_html_and_keep_alternative_links(self):
         self.own.title = '<script>alert("test")</script>' + 'Я'*150

@@ -1,0 +1,7 @@
+{% extends "crm/base.html" %}
+{% block title %}Конфликт изменения этапа{% endblock %}
+{% block content %}
+<h1>Конфликт изменения этапа</h1>
+<p role="alert">{{ message }}</p>
+<p><a href="{% url 'deal_kanban' %}">Обновить доску</a></p>
+{% endblock %}

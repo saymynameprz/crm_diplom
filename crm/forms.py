@@ -115,3 +115,4 @@ class DealForm(forms.ModelForm):
 
 class DealStageForm(forms.Form):
     stage = forms.ChoiceField(label="Этап", choices=Deal.Stage.choices)
+    expected_updated_at = forms.DateTimeField(label="Версия карточки", widget=forms.HiddenInput)

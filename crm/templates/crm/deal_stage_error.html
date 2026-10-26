@@ -2,7 +2,7 @@
 {% block title %}Не удалось изменить этап{% endblock %}
 {% block content %}
 <h1>Не удалось изменить этап</h1>
-<p class="error" role="alert">Выберите допустимый этап. Сделка не изменена.</p>
+<p class="error" role="alert">Проверьте этап и версию карточки. Сделка не изменена. Если доска устарела, откройте её заново.</p>
 <form method="post" action="{% url 'deal_change_stage' deal.pk %}">
 {% csrf_token %}{{ form.as_p }}
 <button type="submit">Переместить</button>

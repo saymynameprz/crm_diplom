@@ -9,6 +9,7 @@
         </dl>
         <form method="post" action="{% url 'deal_change_stage' deal.pk %}">
             {% csrf_token %}
+        <input type="hidden" name="expected_updated_at" value="{{ deal.updated_at|date:'c' }}">
             <label for="deal-stage-{{ deal.pk }}">Этап сделки №{{ deal.pk }}</label>
             <select name="stage" id="deal-stage-{{ deal.pk }}">
                 {% for value, label in stage_choices %}<option value="{{ value }}" {% if deal.stage == value %}selected{% endif %}>{{ label }}</option>{% endfor %}

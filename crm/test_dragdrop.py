@@ -28,11 +28,14 @@ class DragDropTests(TestCase):
     def url(self, deal=None):
         return reverse("deal_change_stage", kwargs={"pk": (deal or self.own).pk})
 
+    def version(self, deal=None):
+        return Deal.objects.get(pk=(deal or self.own).pk).updated_at.isoformat()
+
     def post(self, data, deal=None):
-        return self.client.post(self.url(deal), data, HTTP_ACCEPT="application/json")
+        return self.client.post(self.url(deal), {"expected_updated_at": self.version(deal), **data}, HTTP_ACCEPT="application/json")
 
     def test_html_redirect_and_explicit_json_are_compatible(self):
-        self.assertRedirects(self.client.post(self.url(), {"stage": "contact"}), reverse("deal_kanban"))
+        self.assertRedirects(self.client.post(self.url(), {"stage": "contact", "expected_updated_at": self.version()}), reverse("deal_kanban"))
         response = self.post({"stage": "proposal"})
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -41,7 +44,7 @@ class DragDropTests(TestCase):
         self.assertEqual({c["stage"] for c in data["columns"]}, {"contact", "proposal"})
         self.own.refresh_from_db()
         self.assertEqual(self.own.stage, "proposal")
-        self.assertEqual(self.client.post(self.url(), {"stage": "won"}, HTTP_ACCEPT="*/*").status_code, 302)
+        self.assertEqual(self.client.post(self.url(), {"stage": "won", "expected_updated_at": self.version()}, HTTP_ACCEPT="*/*").status_code, 302)
 
     def test_only_stage_updated_at_change_and_no_new_objects(self):
         before = Deal.objects.values().get(pk=self.own.pk)
@@ -95,7 +98,7 @@ class DragDropTests(TestCase):
             response = browser.post(self.url(), {"stage": "won"}, HTTP_ACCEPT="application/json", **kwargs)
             self.assertEqual(response.status_code, 403)
             self.assertFalse(response.json()["success"])
-        response = browser.post(self.url(), {"stage": "won"}, HTTP_ACCEPT="application/json", HTTP_X_CSRFTOKEN=browser.cookies["csrftoken"].value)
+        response = browser.post(self.url(), {"stage": "won", "expected_updated_at": self.version()}, HTTP_ACCEPT="application/json", HTTP_X_CSRFTOKEN=browser.cookies["csrftoken"].value)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["stage"], "won")
         self.assertEqual(browser.post(self.url(), {"stage": "new"}).status_code, 403)
@@ -146,7 +149,7 @@ class DragDropTests(TestCase):
             self.assertEqual(sum(c["html"].count(f'data-deal-id="{self.own.pk}"') for c in data["columns"]), 1)
 
     def test_json_data_queries_are_bounded(self):
-        request = RequestFactory().post(self.url(), {"stage": "contact"}, HTTP_ACCEPT="application/json")
+        request = RequestFactory().post(self.url(), {"stage": "contact", "expected_updated_at": self.version()}, HTTP_ACCEPT="application/json")
         request.user = self.manager
         with CaptureQueriesContext(connection) as queries:
             response = DealChangeStageView.as_view()(request, pk=self.own.pk)
@@ -155,7 +158,7 @@ class DragDropTests(TestCase):
         self.assertEqual(sum("LIMIT 20" in q["sql"] for q in queries), 2)
 
     def test_server_failure_returns_generic_json_not_traceback(self):
-        with patch("crm.views.Deal.save", side_effect=DatabaseError("PRIVATE DATABASE DETAILS")):
+        with patch("crm.models.DealQuerySet.update", side_effect=DatabaseError("PRIVATE DATABASE DETAILS")):
             with self.assertLogs("crm.views", level="ERROR"):
                 response = self.post({"stage": "won"})
         self.assertEqual(response.status_code, 500)

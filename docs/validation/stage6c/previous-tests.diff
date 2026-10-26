@@ -1,0 +1,58 @@
+diff --git a/crm/test_dragdrop.py b/crm/test_dragdrop.py
+index 9c39a56..a941511 100644
+--- a/crm/test_dragdrop.py
++++ b/crm/test_dragdrop.py
+@@ -30,0 +31,3 @@ class DragDropTests(TestCase):
++    def version(self, deal=None):
++        return Deal.objects.get(pk=(deal or self.own).pk).updated_at.isoformat()
++
+@@ -32 +35 @@ class DragDropTests(TestCase):
+-        return self.client.post(self.url(deal), data, HTTP_ACCEPT="application/json")
++        return self.client.post(self.url(deal), {"expected_updated_at": self.version(deal), **data}, HTTP_ACCEPT="application/json")
+@@ -35 +38 @@ class DragDropTests(TestCase):
+-        self.assertRedirects(self.client.post(self.url(), {"stage": "contact"}), reverse("deal_kanban"))
++        self.assertRedirects(self.client.post(self.url(), {"stage": "contact", "expected_updated_at": self.version()}), reverse("deal_kanban"))
+@@ -44 +47 @@ class DragDropTests(TestCase):
+-        self.assertEqual(self.client.post(self.url(), {"stage": "won"}, HTTP_ACCEPT="*/*").status_code, 302)
++        self.assertEqual(self.client.post(self.url(), {"stage": "won", "expected_updated_at": self.version()}, HTTP_ACCEPT="*/*").status_code, 302)
+@@ -98 +101 @@ class DragDropTests(TestCase):
+-        response = browser.post(self.url(), {"stage": "won"}, HTTP_ACCEPT="application/json", HTTP_X_CSRFTOKEN=browser.cookies["csrftoken"].value)
++        response = browser.post(self.url(), {"stage": "won", "expected_updated_at": self.version()}, HTTP_ACCEPT="application/json", HTTP_X_CSRFTOKEN=browser.cookies["csrftoken"].value)
+@@ -149 +152 @@ class DragDropTests(TestCase):
+-        request = RequestFactory().post(self.url(), {"stage": "contact"}, HTTP_ACCEPT="application/json")
++        request = RequestFactory().post(self.url(), {"stage": "contact", "expected_updated_at": self.version()}, HTTP_ACCEPT="application/json")
+@@ -158 +161 @@ class DragDropTests(TestCase):
+-        with patch("crm.views.Deal.save", side_effect=DatabaseError("PRIVATE DATABASE DETAILS")):
++        with patch("crm.models.DealQuerySet.update", side_effect=DatabaseError("PRIVATE DATABASE DETAILS")):
+diff --git a/crm/test_kanban.py b/crm/test_kanban.py
+index 9057df2..8dd051c 100644
+--- a/crm/test_kanban.py
++++ b/crm/test_kanban.py
+@@ -32,0 +33,3 @@ class KanbanTests(TestCase):
++    def version(self, deal=None):
++        return Deal.objects.get(pk=(deal or self.own).pk).updated_at.isoformat()
++
+@@ -103 +106 @@ class KanbanTests(TestCase):
+-                response = self.client.post(self.url(target), {"stage": stage}, follow=True)
++                response = self.client.post(self.url(target), {"stage": stage, "expected_updated_at": self.version(target)}, follow=True)
+@@ -112 +115 @@ class KanbanTests(TestCase):
+-            response = self.client.post(self.url(), {"stage": stage}, follow=True)
++            response = self.client.post(self.url(), {"stage": stage, "expected_updated_at": self.version()}, follow=True)
+@@ -125 +128 @@ class KanbanTests(TestCase):
+-            response = self.client.post(self.url(), {"stage": "won", "assigned_to": self.other.pk, "amount": "-100",
++            response = self.client.post(self.url(), {"stage": "won", "expected_updated_at": self.version(), "assigned_to": self.other.pk, "amount": "-100",
+@@ -135 +138 @@ class KanbanTests(TestCase):
+-        response = self.client.post(self.url(), {"stage": "new"}, follow=True)
++        response = self.client.post(self.url(), {"stage": "new", "expected_updated_at": self.version()}, follow=True)
+@@ -143 +146 @@ class KanbanTests(TestCase):
+-            response = self.client.post(self.url(), data)
++            response = self.client.post(self.url(), {"expected_updated_at": self.version(), **data})
+@@ -179 +182 @@ class KanbanTests(TestCase):
+-        self.assertRedirects(browser.post(self.url(), {"stage": "won", "csrfmiddlewaretoken": browser.cookies["csrftoken"].value}), reverse("deal_kanban"))
++        self.assertRedirects(browser.post(self.url(), {"stage": "won", "expected_updated_at": self.version(), "csrfmiddlewaretoken": browser.cookies["csrftoken"].value}), reverse("deal_kanban"))
+@@ -184 +187 @@ class KanbanTests(TestCase):
+-        response = self.client.post(self.url()+"?next=https://untrusted.example/", {"stage": "won", "next": "//untrusted.example/", "return_url": "https://untrusted.example/"})
++        response = self.client.post(self.url()+"?next=https://untrusted.example/", {"stage": "won", "expected_updated_at": self.version(), "next": "//untrusted.example/", "return_url": "https://untrusted.example/"})
+@@ -202 +205 @@ class KanbanTests(TestCase):
+-        self.assertEqual(self.client.post(self.url(), {"stage": "won"}).status_code, 302)
++        self.assertEqual(self.client.post(self.url(), {"stage": "won", "expected_updated_at": self.version()}).status_code, 302)
