@@ -5,6 +5,7 @@
 <p>Удалить клиента «{{ client.full_name }}»? Это действие нельзя отменить.</p>
 <form method="post">
     {% csrf_token %}
+    {% if form.errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
     <div class="actions"><button type="submit" class="danger">Удалить</button><a href="{{ client.get_absolute_url }}">Отмена</a></div>
 </form>
 {% endblock %}

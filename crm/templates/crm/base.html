@@ -13,6 +13,7 @@
     <nav class="navigation" aria-label="Основная навигация">
         <a href="{% url 'home' %}">Главная</a>
         <a href="{% url 'client_list' %}">Клиенты</a>
+        <a href="{% url 'request_list' %}">Заявки</a>
     </nav>
     {% endif %}
     <main class="card {% block card_class %}{% endblock %}">

@@ -15,4 +15,12 @@
     {% if user.is_superuser %}<a href="{% url 'client_delete' client.pk %}">Удалить</a>{% endif %}
     <a href="{% url 'client_list' %}">К списку</a>
 </div>
+<h2>Заявки клиента</h2>
+<ul class="client-list">
+{% for item in client_requests %}
+    <li><a href="{{ item.get_absolute_url }}">{{ item.title }}</a> — {{ item.get_status_display }}</li>
+{% empty %}
+    <li>Нет доступных заявок клиента.</li>
+{% endfor %}
+</ul>
 {% endblock %}

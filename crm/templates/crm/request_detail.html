@@ -1,0 +1,19 @@
+{% extends "crm/base.html" %}
+{% block title %}Карточка заявки{% endblock %}
+{% block content %}
+<h1>{{ client_request.title }}</h1>
+<dl>
+    <dt>Клиент</dt><dd><a href="{{ client_request.client.get_absolute_url }}">{{ client_request.client }}</a></dd>
+    <dt>Статус</dt><dd><span class="status status-{{ client_request.status }}">{{ client_request.get_status_display }}</span></dd>
+    <dt>Ответственный</dt><dd>{{ client_request.assigned_to|default:"Не назначен" }}</dd>
+    <dt>Описание</dt><dd>{{ client_request.description|default:"Не указано"|linebreaksbr }}</dd>
+    <dt>Срок обработки (UTC)</dt><dd>{{ client_request.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</dd>
+    <dt>Создана (UTC)</dt><dd>{{ client_request.created_at|date:"d.m.Y H:i" }}</dd>
+    <dt>Изменена (UTC)</dt><dd>{{ client_request.updated_at|date:"d.m.Y H:i" }}</dd>
+</dl>
+<div class="actions">
+    <a href="{% url 'request_update' client_request.pk %}">Редактировать</a>
+    {% if user.is_superuser %}<a href="{% url 'request_delete' client_request.pk %}">Удалить</a>{% endif %}
+    <a href="{% url 'request_list' %}">К списку заявок</a>
+</div>
+{% endblock %}
