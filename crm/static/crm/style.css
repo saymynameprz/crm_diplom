@@ -1,0 +1,16 @@
+:root { font-family: system-ui, sans-serif; color: #172b4d; background: #f1f4f9; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 2rem 1rem; }
+.brand { max-width: 28rem; margin: 0 auto 1.25rem; font-weight: 700; color: #31518a; }
+.card { max-width: 28rem; margin: auto; padding: 2rem; background: white; border: 1px solid #dbe2ed; border-radius: 1rem; box-shadow: 0 8px 30px #172b4d0a; }
+h1 { margin-top: 0; font-size: 1.7rem; }
+p { line-height: 1.6; }
+label { display: block; margin: 1rem 0 .4rem; font-weight: 600; }
+input:not([type=hidden]) { width: 100%; padding: .75rem; border: 1px solid #687a95; border-radius: .4rem; font: inherit; }
+button { margin-top: 1.5rem; padding: .8rem 1.5rem; border: 0; border-radius: .4rem; background: #214fa0; color: white; font: inherit; font-weight: 600; cursor: pointer; }
+a { color: #214fa0; }
+:focus-visible { outline: 3px solid #aa6500; outline-offset: 3px; }
+.error { padding: .8rem; background: #fff0f0; color: #8c2020; border: 1px solid #d99494; border-radius: .4rem; }
+dt { color: #536580; font-size: .9rem; }
+dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
+@media (max-width: 360px) { .card { padding: 1.25rem; } }

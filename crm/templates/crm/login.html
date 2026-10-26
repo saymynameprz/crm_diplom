@@ -1,0 +1,18 @@
+{% extends "crm/base.html" %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+<h1>Вход в CRM</h1>
+<p>Введите логин и пароль, выданные администратором.</p>
+{% if form.errors %}
+<div class="error" role="alert">Не удалось войти. Проверьте логин и пароль или обратитесь к администратору.</div>
+{% endif %}
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label for="{{ form.username.id_for_label }}">Логин</label>
+    {{ form.username }}
+    <label for="{{ form.password.id_for_label }}">Пароль</label>
+    {{ form.password }}
+    <button type="submit">Войти</button>
+</form>
+{% endblock %}

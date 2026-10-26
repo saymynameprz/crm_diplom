@@ -1,0 +1,14 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}CRM{% endblock %} · Дипломная CRM</title>
+    <link rel="stylesheet" href="{% static 'crm/style.css' %}">
+</head>
+<body>
+    <header class="brand">Дипломная CRM</header>
+    <main class="card">{% block content %}{% endblock %}</main>
+</body>
+</html>
