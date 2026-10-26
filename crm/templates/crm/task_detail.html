@@ -1,0 +1,20 @@
+{% extends "crm/base.html" %}
+{% block title %}Карточка задачи{% endblock %}
+{% block content %}
+<h1>{{ task.title }}</h1>
+<dl>
+    <dt>Заявка</dt><dd><a href="{{ task.request.get_absolute_url }}">{{ task.request }}</a></dd>
+    <dt>Ответственный</dt><dd>{{ task.assigned_to|default:"Не назначен" }}</dd>
+    <dt>Статус</dt><dd><span class="status status-{{ task.status }}">{{ task.get_status_display }}</span></dd>
+    <dt>Описание</dt><dd>{{ task.description|default:"Не указано"|linebreaksbr }}</dd>
+    <dt>Срок выполнения (UTC)</dt><dd>{{ task.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</dd>
+    <dt>Дата завершения (UTC)</dt><dd>{{ task.completed_at|date:"d.m.Y H:i"|default:"Не указана" }}</dd>
+    <dt>Создана (UTC)</dt><dd>{{ task.created_at|date:"d.m.Y H:i" }}</dd>
+    <dt>Изменена (UTC)</dt><dd>{{ task.updated_at|date:"d.m.Y H:i" }}</dd>
+</dl>
+<div class="actions">
+    <a href="{% url 'task_update' task.pk %}">Редактировать</a>
+    {% if user.is_superuser %}<a href="{% url 'task_delete' task.pk %}">Удалить</a>{% endif %}
+    <a href="{% url 'task_list' %}">К списку задач</a>
+</div>
+{% endblock %}

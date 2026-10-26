@@ -16,4 +16,12 @@
     {% if user.is_superuser %}<a href="{% url 'request_delete' client_request.pk %}">Удалить</a>{% endif %}
     <a href="{% url 'request_list' %}">К списку заявок</a>
 </div>
+<h2>Задачи заявки</h2>
+<ul class="client-list">
+{% for task in request_tasks %}
+    <li><a href="{{ task.get_absolute_url }}">{{ task.title }}</a> — {{ task.get_status_display }}</li>
+{% empty %}
+    <li>Нет доступных задач заявки.</li>
+{% endfor %}
+</ul>
 {% endblock %}

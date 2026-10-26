@@ -7,8 +7,8 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import ClientForm, ClientRequestForm
-from .models import Client, ClientRequest
+from .forms import ClientForm, ClientRequestForm, TaskForm
+from .models import Client, ClientRequest, Task
 
 
 @login_required
@@ -133,6 +133,11 @@ class RequestDetailView(RequestAccessMixin, DetailView):
     template_name = "crm/request_detail.html"
     context_object_name = "client_request"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["request_tasks"] = Task.objects.visible_to(self.request.user).filter(request=self.object).select_related("assigned_to")
+        return context
+
 
 class RequestFormMixin:
     form_class = ClientRequestForm
@@ -156,6 +161,83 @@ class RequestDeleteView(RequestAccessMixin, UserPassesTestMixin, SuccessMessageM
     context_object_name = "client_request"
     success_url = reverse_lazy("request_list")
     success_message = "Заявка удалена."
+    http_method_names = ["get", "post", "head", "options"]
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except ProtectedError:
+            form.add_error(None, "Нельзя удалить заявку: у неё есть связанные задачи. Данные сохранены.")
+            return self.form_invalid(form)
+
+
+class TaskAccessMixin(LoginRequiredMixin):
+    model = Task
+
+    def get_queryset(self):
+        return super().get_queryset().visible_to(self.request.user).select_related(
+            "request__client", "request__assigned_to", "assigned_to"
+        )
+
+
+class TaskListView(TaskAccessMixin, ListView):
+    template_name = "crm/task_list.html"
+    context_object_name = "tasks"
+    paginate_by = 10
+
+    def get_queryset(self):
+        tasks = super().get_queryset()
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            tasks = tasks.filter(title__icontains=query)
+        status = self.request.GET.get("status", "")
+        if status in Task.Status.values:
+            tasks = tasks.filter(status=status)
+        if self.request.GET.get("sort") == "oldest":
+            return tasks.order_by("created_at", "pk")
+        return tasks.order_by("-created_at", "-pk")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            query=self.request.GET.get("q", "").strip(),
+            status_filter=self.request.GET.get("status", ""),
+            status_choices=Task.Status.choices,
+            sort=self.request.GET.get("sort", "newest"),
+        )
+        return context
+
+
+class TaskDetailView(TaskAccessMixin, DetailView):
+    template_name = "crm/task_detail.html"
+    context_object_name = "task"
+
+
+class TaskFormMixin:
+    form_class = TaskForm
+    template_name = "crm/task_form.html"
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_form_kwargs(self):
+        return {**super().get_form_kwargs(), "user": self.request.user}
+
+
+class TaskCreateView(TaskAccessMixin, TaskFormMixin, SuccessMessageMixin, CreateView):
+    success_message = "Задача создана."
+
+
+class TaskUpdateView(TaskAccessMixin, TaskFormMixin, SuccessMessageMixin, UpdateView):
+    success_message = "Задача сохранена."
+
+
+class TaskDeleteView(TaskAccessMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
+    template_name = "crm/task_confirm_delete.html"
+    context_object_name = "task"
+    success_url = reverse_lazy("task_list")
+    success_message = "Задача удалена."
     http_method_names = ["get", "post", "head", "options"]
 
     def test_func(self):

@@ -1,0 +1,45 @@
+{% extends "crm/base.html" %}
+{% block title %}Задачи{% endblock %}
+{% block card_class %}wide{% endblock %}
+{% block content %}
+<h1>Задачи</h1>
+<p><a class="button" href="{% url 'task_create' %}">Добавить задачу</a></p>
+<form method="get" class="filters">
+    <label for="q">Поиск по названию</label><input type="search" id="q" name="q" value="{{ query }}">
+    <label for="status">Статус</label><select id="status" name="status">
+        <option value="">Все статусы</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <label for="sort">Дата создания</label><select id="sort" name="sort">
+        <option value="newest">Сначала новые</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
+    </select>
+    <div class="actions"><button type="submit">Найти</button><a href="{% url 'task_list' %}">Сбросить</a></div>
+</form>
+<div class="request-table">
+<table>
+    <caption class="visually-hidden">Доступные задачи</caption>
+    <thead><tr><th>Задача</th><th>Заявка</th><th>Ответственный</th><th>Статус</th><th>Срок (UTC)</th></tr></thead>
+    <tbody>
+    {% for task in tasks %}
+        <tr>
+            <td data-label="Задача"><a href="{{ task.get_absolute_url }}">{{ task.title }}</a></td>
+            <td data-label="Заявка"><a href="{{ task.request.get_absolute_url }}">{{ task.request }}</a></td>
+            <td data-label="Ответственный">{{ task.assigned_to|default:"Не назначен" }}</td>
+            <td data-label="Статус"><span class="status status-{{ task.status }}">{{ task.get_status_display }}</span></td>
+            <td data-label="Срок (UTC)">{{ task.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5">{% if query or status_filter %}Задачи не найдены.{% else %}Доступных задач пока нет.{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% if is_paginated %}
+<nav class="pagination" aria-label="Страницы задач">
+    {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
+    <span>Страница {{ page_obj.number }} из {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}
