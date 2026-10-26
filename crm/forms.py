@@ -24,6 +24,8 @@ class ClientRequestForm(forms.ModelForm):
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        if self.instance._state.adding:
+            del self.fields["status"]
         if user.is_superuser:
             self.fields["assigned_to"].queryset = get_user_model().objects.filter(is_active=True).order_by("username")
             self.fields["assigned_to"].required = True
@@ -31,6 +33,8 @@ class ClientRequestForm(forms.ModelForm):
             del self.fields["assigned_to"]
 
     def save(self, commit=True):
+        if self.instance._state.adding:
+            self.instance.status = ClientRequest.Status.NEW
         if not self.instance.pk and not self.user.is_superuser:
             self.instance.assigned_to = self.user
         return super().save(commit=commit)

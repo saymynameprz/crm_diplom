@@ -53,7 +53,8 @@ class RequestTests(TestCase):
         self.assertEqual(self.own.status, ClientRequest.Status.NEW)
         self.assertEqual(str(self.own), self.own.title)
         response = self.client.get(reverse("request_create"))
-        self.assertEqual(response.context["form"]["status"].value(), "new")
+        self.assertNotIn("status", response.context["form"].fields)
+        self.assertEqual(response.context["form"].instance.status, "new")
 
     def test_anonymous_denied_all_pages_and_posts(self):
         self.client.logout()

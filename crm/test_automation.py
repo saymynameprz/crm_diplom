@@ -123,7 +123,7 @@ class AutomationTests(TestCase):
         self.assertEqual(Task.objects.count(), 0)
 
     def test_invalid_request_creates_neither_record(self):
-        for data in (self.data(title=" "), self.data(client=999999), self.data(status="bad")):
+        for data in (self.data(title=" "), self.data(client=999999), self.data(due_at="invalid")):
             response = self.client.post(reverse("request_create"), data)
             self.assertEqual(response.status_code, 200)
         self.client.force_login(self.admin)

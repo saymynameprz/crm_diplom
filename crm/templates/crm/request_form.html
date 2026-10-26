@@ -3,6 +3,7 @@
 {% block content %}
 <h1>{% if object %}Редактирование заявки{% else %}Новая заявка{% endif %}</h1>
 {% if not user.is_superuser %}<p>Ответственным будете вы. Переназначить заявку может только администратор.</p>{% endif %}
+{% if object and user.is_superuser %}<p class="notice" role="note">При смене ответственного существующие задачи требуют ручного переназначения. Откройте каждую задачу и назначьте нового ответственного.</p>{% endif %}
 <form method="post">
     {% csrf_token %}
     {% if form.errors %}<p class="error" role="alert">Проверьте отмеченные поля. Данные не сохранены.</p>{% endif %}
