@@ -23,4 +23,10 @@
     <li>Нет доступных заявок клиента.</li>
 {% endfor %}
 </ul>
+<h2>Сделки клиента</h2>
+<ul class="client-list">
+{% for deal in client_deals %}
+    <li><a href="{{ deal.get_absolute_url }}">{{ deal.title }}</a> — {{ deal.amount|floatformat:"2" }} ₽ · {{ deal.get_stage_display }}</li>
+{% empty %}<li>Нет доступных сделок клиента.</li>{% endfor %}
+</ul>
 {% endblock %}

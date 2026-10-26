@@ -50,3 +50,8 @@ textarea { resize: vertical; }
 .request-table th { font-size: .9rem; }
 .overdue { display: inline-block; padding: .25rem .4rem; border-radius: .35rem; background: #fff0f0; color: #8c2020; font-weight: 600; }
 .summary dd { font-size: 1.4rem; font-weight: 700; }
+.stage-new { background: #e8efff; color: #21417b; }
+.stage-contact { background: #e5f3f5; color: #20525b; }
+.stage-proposal { background: #fff2cf; color: #6e4700; }
+.stage-won { background: #e3f4e8; color: #215c34; }
+.stage-lost { background: #f6e7e7; color: #812c2c; }

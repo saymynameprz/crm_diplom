@@ -4,6 +4,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("deals/", views.DealListView.as_view(), name="deal_list"),
+    path("deals/create/", views.DealCreateView.as_view(), name="deal_create"),
+    path("deals/<int:pk>/", views.DealDetailView.as_view(), name="deal_detail"),
+    path("deals/<int:pk>/edit/", views.DealUpdateView.as_view(), name="deal_update"),
+    path("deals/<int:pk>/delete/", views.DealDeleteView.as_view(), name="deal_delete"),
     path("tasks/", views.TaskListView.as_view(), name="task_list"),
     path("tasks/create/", views.TaskCreateView.as_view(), name="task_create"),
     path("tasks/<int:pk>/", views.TaskDetailView.as_view(), name="task_detail"),

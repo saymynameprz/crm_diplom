@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Client, ClientRequest, Task
+from .models import Client, ClientRequest, Task, Deal
 
 
 class ClientForm(forms.ModelForm):
@@ -82,4 +82,32 @@ class TaskForm(forms.ModelForm):
     def save(self, commit=True):
         if not self.instance.pk and not self.user.is_superuser:
             self.instance.assigned_to = self.user
+        return super().save(commit=commit)
+
+
+class DealForm(forms.ModelForm):
+    class Meta:
+        model = Deal
+        fields = ["client", "title", "description", "amount", "stage", "assigned_to", "expected_close_date"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 5}),
+            "expected_close_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+        }
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        if self.instance._state.adding:
+            del self.fields["stage"]
+        if user.is_superuser:
+            self.fields["assigned_to"].queryset = get_user_model().objects.filter(is_active=True).order_by("username")
+            self.fields["assigned_to"].required = True
+        else:
+            del self.fields["assigned_to"]
+
+    def save(self, commit=True):
+        if self.instance._state.adding:
+            self.instance.stage = Deal.Stage.NEW
+            if not self.user.is_superuser:
+                self.instance.assigned_to = self.user
         return super().save(commit=commit)

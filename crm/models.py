@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -149,3 +152,44 @@ class Task(DeadlineMixin, models.Model):
         if update_fields is not None:
             kwargs["update_fields"] = update_fields | {"completed_at", "updated_at"}
         return super().save(*args, **kwargs)
+
+
+class DealQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        if user.is_superuser:
+            return self.all()
+        return self.filter(assigned_to=user)
+
+
+class Deal(models.Model):
+    class Stage(models.TextChoices):
+        NEW = "new", "Новая"
+        CONTACT = "contact", "Контакт установлен"
+        PROPOSAL = "proposal", "Коммерческое предложение"
+        WON = "won", "Успешно завершена"
+        LOST = "lost", "Проиграна"
+
+    client = models.ForeignKey(Client, verbose_name="Клиент", on_delete=models.PROTECT, related_name="deals")
+    title = models.CharField("Название сделки", max_length=200)
+    description = models.TextField("Описание", max_length=5000, blank=True)
+    amount = models.DecimalField("Сумма (руб.)", max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
+    stage = models.CharField("Этап", max_length=20, choices=Stage.choices, default=Stage.NEW)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Ответственный", on_delete=models.SET_NULL,
+                                    null=True, blank=True, related_name="crm_deals")
+    expected_close_date = models.DateField("Планируемая дата закрытия", null=True, blank=True)
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    updated_at = models.DateTimeField("Дата изменения", auto_now=True)
+
+    objects = DealQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "Сделка"
+        verbose_name_plural = "Сделки"
+        ordering = ["-created_at", "-pk"]
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name="deal_amount_positive")]
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("deal_detail", kwargs={"pk": self.pk})

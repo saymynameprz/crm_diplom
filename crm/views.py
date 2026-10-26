@@ -13,8 +13,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import ClientForm, ClientRequestForm, TaskForm
-from .models import Client, ClientRequest, Task
+from .forms import ClientForm, ClientRequestForm, TaskForm, DealForm
+from .models import Client, ClientRequest, Task, Deal
 from .services import AutomationError, create_request_with_task
 
 logger = logging.getLogger(__name__)
@@ -78,6 +78,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         if not self.request.user.is_superuser:
             related = related.filter(assigned_to=self.request.user)
         context["client_requests"] = related
+        context["client_deals"] = Deal.objects.visible_to(self.request.user).filter(client=self.object).select_related("assigned_to")
         return context
 
 
@@ -106,7 +107,7 @@ class ClientDeleteView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMi
         try:
             return super().form_valid(form)
         except ProtectedError:
-            form.add_error(None, "Нельзя удалить клиента: у него есть связанные заявки. Данные сохранены.")
+            form.add_error(None, "Нельзя удалить клиента: у него есть связанные заявки или сделки. Данные сохранены.")
             return self.form_invalid(form)
 
 
@@ -272,6 +273,65 @@ class TaskDeleteView(TaskAccessMixin, UserPassesTestMixin, SuccessMessageMixin, 
     context_object_name = "task"
     success_url = reverse_lazy("task_list")
     success_message = "Задача удалена."
+    http_method_names = ["get", "post", "head", "options"]
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+
+class DealAccessMixin(LoginRequiredMixin):
+    model = Deal
+
+    def get_queryset(self):
+        return super().get_queryset().visible_to(self.request.user).select_related("client", "assigned_to")
+
+
+class DealListView(DealAccessMixin, ListView):
+    context_object_name = "deals"
+    paginate_by = 10
+
+    def get_queryset(self):
+        deals = super().get_queryset()
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            deals = deals.filter(Q(title__icontains=query) | Q(client__full_name__icontains=query))
+        stage = self.request.GET.get("stage", "")
+        if stage in Deal.Stage.values:
+            deals = deals.filter(stage=stage)
+        if self.request.GET.get("sort") == "oldest":
+            return deals.order_by("created_at", "pk")
+        return deals.order_by("-created_at", "-pk")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(query=self.request.GET.get("q", "").strip(), stage_filter=self.request.GET.get("stage", ""),
+                       stage_choices=Deal.Stage.choices, sort=self.request.GET.get("sort", "newest"))
+        return context
+
+
+class DealDetailView(DealAccessMixin, DetailView):
+    pass
+
+
+class DealFormMixin:
+    form_class = DealForm
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_form_kwargs(self):
+        return {**super().get_form_kwargs(), "user": self.request.user}
+
+
+class DealCreateView(DealAccessMixin, DealFormMixin, SuccessMessageMixin, CreateView):
+    success_message = "Сделка создана."
+
+
+class DealUpdateView(DealAccessMixin, DealFormMixin, SuccessMessageMixin, UpdateView):
+    success_message = "Сделка сохранена."
+
+
+class DealDeleteView(DealAccessMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
+    success_url = reverse_lazy("deal_list")
+    success_message = "Сделка удалена."
     http_method_names = ["get", "post", "head", "options"]
 
     def test_func(self):
