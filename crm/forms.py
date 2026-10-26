@@ -57,6 +57,10 @@ class TaskForm(forms.ModelForm):
             del self.fields["assigned_to"]
             linked_requests = linked_requests.filter(assigned_to=user)
         self.fields["request"].queryset = linked_requests
+        if self.instance.is_automatic:
+            self.fields["request"].disabled = True
+        else:
+            self.fields["title"] = forms.CharField(label="Название задачи", max_length=200)
 
     def clean(self):
         cleaned = super().clean()

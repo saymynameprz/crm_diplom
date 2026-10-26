@@ -1,19 +1,38 @@
+import logging
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Q
+from django.db import DatabaseError
+from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import ClientForm, ClientRequestForm, TaskForm
 from .models import Client, ClientRequest, Task
+from .services import AutomationError, create_request_with_task
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
 def home(request):
-    return render(request, "crm/home.html")
+    at = timezone.now()
+    request_counts = ClientRequest.objects.visible_to(request.user).with_overdue(at).aggregate(
+        total=Count("pk"), overdue=Count("pk", filter=Q(overdue_flag=True)),
+    )
+    task_counts = Task.objects.visible_to(request.user).with_overdue(at).aggregate(
+        total=Count("pk"), overdue=Count("pk", filter=Q(overdue_flag=True)),
+    )
+    return render(request, "crm/home.html", {
+        "request_count": request_counts["total"], "task_count": task_counts["total"],
+        "overdue_request_count": request_counts["overdue"], "overdue_task_count": task_counts["overdue"],
+    })
 
 
 class ClientListView(LoginRequiredMixin, ListView):
@@ -95,10 +114,7 @@ class RequestAccessMixin(LoginRequiredMixin):
     model = ClientRequest
 
     def get_queryset(self):
-        requests = super().get_queryset().select_related("client", "assigned_to")
-        if not self.request.user.is_superuser:
-            requests = requests.filter(assigned_to=self.request.user)
-        return requests
+        return super().get_queryset().visible_to(self.request.user).select_related("client", "assigned_to")
 
 
 class RequestListView(RequestAccessMixin, ListView):
@@ -107,13 +123,16 @@ class RequestListView(RequestAccessMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        requests = super().get_queryset()
+        requests = super().get_queryset().with_overdue()
         query = self.request.GET.get("q", "").strip()
         if query:
             requests = requests.filter(title__icontains=query)
         status = self.request.GET.get("status", "")
         if status in ClientRequest.Status.values:
             requests = requests.filter(status=status)
+        overdue = self.request.GET.get("overdue")
+        if overdue in ("yes", "no"):
+            requests = requests.filter(overdue_flag=overdue == "yes")
         if self.request.GET.get("sort") == "oldest":
             return requests.order_by("created_at", "pk")
         return requests.order_by("-created_at", "-pk")
@@ -123,6 +142,7 @@ class RequestListView(RequestAccessMixin, ListView):
         context.update(
             query=self.request.GET.get("q", "").strip(),
             status_filter=self.request.GET.get("status", ""),
+            overdue_filter=self.request.GET.get("overdue", ""),
             status_choices=ClientRequest.Status.choices,
             sort=self.request.GET.get("sort", "newest"),
         )
@@ -148,8 +168,18 @@ class RequestFormMixin:
         return {**super().get_form_kwargs(), "user": self.request.user}
 
 
-class RequestCreateView(RequestAccessMixin, RequestFormMixin, SuccessMessageMixin, CreateView):
-    success_message = "Заявка создана."
+class RequestCreateView(RequestAccessMixin, RequestFormMixin, CreateView):
+    def form_valid(self, form):
+        try:
+            self.object = create_request_with_task(form)
+        except (AutomationError, DatabaseError):
+            logger.exception("Не удалось сохранить заявку с автоматической задачей")
+            form.instance.pk = None
+            form.instance._state.adding = True
+            form.add_error(None, "Не удалось создать заявку и задачу. Данные не сохранены. Попробуйте ещё раз.")
+            return self.form_invalid(form)
+        messages.success(self.request, "Заявка создана. Автоматическая задача добавлена.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class RequestUpdateView(RequestAccessMixin, RequestFormMixin, SuccessMessageMixin, UpdateView):
@@ -189,13 +219,16 @@ class TaskListView(TaskAccessMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        tasks = super().get_queryset()
+        tasks = super().get_queryset().with_overdue()
         query = self.request.GET.get("q", "").strip()
         if query:
             tasks = tasks.filter(title__icontains=query)
         status = self.request.GET.get("status", "")
         if status in Task.Status.values:
             tasks = tasks.filter(status=status)
+        overdue = self.request.GET.get("overdue")
+        if overdue in ("yes", "no"):
+            tasks = tasks.filter(overdue_flag=overdue == "yes")
         if self.request.GET.get("sort") == "oldest":
             return tasks.order_by("created_at", "pk")
         return tasks.order_by("-created_at", "-pk")
@@ -205,6 +238,7 @@ class TaskListView(TaskAccessMixin, ListView):
         context.update(
             query=self.request.GET.get("q", "").strip(),
             status_filter=self.request.GET.get("status", ""),
+            overdue_filter=self.request.GET.get("overdue", ""),
             status_choices=Task.Status.choices,
             sort=self.request.GET.get("sort", "newest"),
         )

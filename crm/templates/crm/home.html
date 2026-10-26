@@ -6,6 +6,13 @@
     <dt>Пользователь</dt><dd>{{ user.get_full_name|default:user.username }}</dd>
     <dt>Роль</dt><dd>{% if user.is_superuser %}Администратор{% else %}Менеджер{% endif %}</dd>
 </dl>
+<h2>Доступные записи</h2>
+<dl class="summary">
+    <dt><a href="{% url 'request_list' %}">Заявки</a></dt><dd id="request-count">{{ request_count }}</dd>
+    <dt><a href="{% url 'task_list' %}">Задачи</a></dt><dd id="task-count">{{ task_count }}</dd>
+    <dt><a href="{% url 'request_list' %}?overdue=yes">Просроченные заявки</a></dt><dd id="overdue-request-count">{{ overdue_request_count }}</dd>
+    <dt><a href="{% url 'task_list' %}?overdue=yes">Просроченные задачи</a></dt><dd id="overdue-task-count">{{ overdue_task_count }}</dd>
+</dl>
 {% if user.is_superuser %}<p><a href="{% url 'admin:index' %}">Управление пользователями</a></p>{% endif %}
 <form method="post" action="{% url 'logout' %}">
     {% csrf_token %}

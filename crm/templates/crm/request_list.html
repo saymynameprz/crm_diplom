@@ -10,6 +10,11 @@
         <option value="">Все статусы</option>
         {% for value, label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
     </select>
+    <label for="overdue">Просрочка</label><select id="overdue" name="overdue">
+        <option value="">Все записи</option>
+        <option value="yes" {% if overdue_filter == 'yes' %}selected{% endif %}>Просроченные</option>
+        <option value="no" {% if overdue_filter == 'no' %}selected{% endif %}>Непросроченные</option>
+    </select>
     <label for="sort">Дата создания</label><select id="sort" name="sort">
         <option value="newest">Сначала новые</option>
         <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
@@ -25,7 +30,7 @@
         <tr>
             <td data-label="Заявка"><a href="{{ item.get_absolute_url }}">{{ item.title }}</a></td>
             <td data-label="Клиент"><a href="{{ item.client.get_absolute_url }}">{{ item.client }}</a></td>
-            <td data-label="Статус"><span class="status status-{{ item.status }}">{{ item.get_status_display }}</span></td>
+            <td data-label="Статус"><span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% if item.overdue_flag %} <span class="overdue">Просрочена</span>{% endif %}</td>
             <td data-label="Ответственный">{{ item.assigned_to|default:"Не назначен" }}</td>
             <td data-label="Срок (UTC)">{{ item.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</td>
             <td data-label="Создана (UTC)">{{ item.created_at|date:"d.m.Y H:i" }}</td>

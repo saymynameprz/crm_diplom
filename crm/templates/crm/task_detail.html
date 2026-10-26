@@ -2,6 +2,8 @@
 {% block title %}Карточка задачи{% endblock %}
 {% block content %}
 <h1>{{ task.title }}</h1>
+{% if task.is_overdue %}<p class="overdue">Просрочена</p>{% endif %}
+{% if task.is_automatic %}<p>Автоматическая задача</p>{% endif %}
 <dl>
     <dt>Заявка</dt><dd><a href="{{ task.request.get_absolute_url }}">{{ task.request }}</a></dd>
     <dt>Ответственный</dt><dd>{{ task.assigned_to|default:"Не назначен" }}</dd>

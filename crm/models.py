@@ -25,12 +25,37 @@ class Client(models.Model):
         return reverse("client_detail", kwargs={"pk": self.pk})
 
 
-class ClientRequest(models.Model):
+class DeadlineQuerySet(models.QuerySet):
+    def with_overdue(self, at=None):
+        at = timezone.now() if at is None else at
+        return self.annotate(overdue_flag=models.Case(
+            models.When(due_at__lt=at, status__in=self.model.OPEN_STATUSES, then=True),
+            default=False, output_field=models.BooleanField(),
+        ))
+
+
+class DeadlineMixin:
+    @property
+    def is_overdue(self):
+        return self.due_at is not None and self.status in self.OPEN_STATUSES and self.due_at < timezone.now()
+
+
+class ClientRequestQuerySet(DeadlineQuerySet):
+    def visible_to(self, user):
+        if user.is_superuser:
+            return self.all()
+        return self.filter(assigned_to=user)
+
+
+class ClientRequest(DeadlineMixin, models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Новая"
         IN_PROGRESS = "in_progress", "В работе"
         COMPLETED = "completed", "Завершена"
         CANCELLED = "cancelled", "Отменена"
+
+    OPEN_STATUSES = (Status.NEW, Status.IN_PROGRESS)
+    objects = ClientRequestQuerySet.as_manager()
 
     client = models.ForeignKey(Client, verbose_name="Клиент", on_delete=models.PROTECT, related_name="requests")
     title = models.CharField("Название заявки", max_length=200)
@@ -56,21 +81,23 @@ class ClientRequest(models.Model):
         return reverse("request_detail", kwargs={"pk": self.pk})
 
 
-class TaskQuerySet(models.QuerySet):
+class TaskQuerySet(DeadlineQuerySet):
     def visible_to(self, user):
         if user.is_superuser:
             return self.all()
         return self.filter(assigned_to=user, request__assigned_to=user)
 
 
-class Task(models.Model):
+class Task(DeadlineMixin, models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Новая"
         IN_PROGRESS = "in_progress", "В работе"
         COMPLETED = "completed", "Выполнена"
 
+    OPEN_STATUSES = (Status.NEW, Status.IN_PROGRESS)
+
     request = models.ForeignKey(ClientRequest, verbose_name="Заявка", on_delete=models.PROTECT, related_name="tasks")
-    title = models.CharField("Название задачи", max_length=200)
+    title = models.CharField("Название задачи", max_length=255)
     description = models.TextField("Описание", max_length=5000, blank=True)
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name="Ответственный", on_delete=models.SET_NULL,
@@ -78,6 +105,7 @@ class Task(models.Model):
     )
     status = models.CharField("Статус", max_length=20, choices=Status.choices, default=Status.NEW)
     due_at = models.DateTimeField("Срок выполнения", null=True, blank=True)
+    is_automatic = models.BooleanField("Автоматическая задача", default=False, editable=False)
     completed_at = models.DateTimeField("Дата завершения", null=True, blank=True, editable=False)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     updated_at = models.DateTimeField("Дата изменения", auto_now=True)
@@ -88,6 +116,9 @@ class Task(models.Model):
         verbose_name = "Задача"
         verbose_name_plural = "Задачи"
         ordering = ["-created_at", "-pk"]
+        constraints = [
+            models.UniqueConstraint(fields=["request"], condition=models.Q(is_automatic=True), name="one_automatic_task_per_request"),
+        ]
 
     def __str__(self):
         return self.title

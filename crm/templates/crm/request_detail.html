@@ -2,6 +2,7 @@
 {% block title %}Карточка заявки{% endblock %}
 {% block content %}
 <h1>{{ client_request.title }}</h1>
+{% if client_request.is_overdue %}<p class="overdue">Просрочена</p>{% endif %}
 <dl>
     <dt>Клиент</dt><dd><a href="{{ client_request.client.get_absolute_url }}">{{ client_request.client }}</a></dd>
     <dt>Статус</dt><dd><span class="status status-{{ client_request.status }}">{{ client_request.get_status_display }}</span></dd>
