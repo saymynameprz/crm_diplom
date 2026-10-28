@@ -1,5 +1,7 @@
 # Итерация 7 — протокол проверки 26.10.2026
 
+Исторический протокол своего этапа. При очистке 28.10.2026 обычные выводы запусков свёрнуты в этот документ; исходные файлы доступны в Git `3b1f0d7da4ef3c102158c9784c218b325d8ff49a` / `before-repository-cleanup-2026-10-28`. [Восстановление и перечень](PROGRESS.md#repository-cleanup). Результаты ниже не выдаются за новый запуск при очистке.
+
 База: `cdb6e09331b9da4a50bc51c5c4f3ed837bcb4241`, до изменений рабочее дерево чистое; контрольная точка сохранена тегом `iteration-6c`. Python 3.12.14 / Django 5.2.18. До работы — **205/205 OK, exit 0**; после — **231/231 OK, exit 0**. Новый `crm.test_interactions` — **26/26 OK, exit 0**. Прежние 205 тестов побайтно сохранены. Этап 8 не начат.
 
 ## Что добавлено
@@ -25,7 +27,7 @@ ClientInteraction с client/created_by PROTECT, четырьмя типами, �
 | node --check crm/static/crm/kanban.js | Синтаксис корректен | 0 |
 | git diff --check | Ошибок whitespace нет | 0 |
 
-Полный исходный вывод — [baseline.log](validation/iteration7/baseline.log), команды/версии/exit codes/итоговый вывод — [checks.json](validation/iteration7/checks.json). pip предупредил только о недоступном кэше; это не ошибка проверки зависимостей.
+Существенные сведения baseline.log/checks.json сохранены в таблице команд и сводке времён ниже; полные исходные выводы доступны в Git по контрольной точке в начале документа. pip предупредил только о недоступном кэше; это не ошибка проверки зависимостей.
 
 Новые тесты объединяют все основные положительные/отрицательные сценарии: создание двумя ролями/четыре типа/подмена автора и служебных полей; длины/пробелы/неверные данные и сохранение текста; aware past/now/future с фиксированным временем и naive full_clean; редактирование своим/администратором; scoped чужие URL/поиск/клиент, inactive/anonymous; CSRF всех мутаций; GET/POST/403/404/PROTECT; независимость заявок/задач/сделок/просрочки; фильтры/порядок/PK-ties/пагинация; top10/продолжение без чужих counts; SQL LIMIT/N+1; экранирование и миграция. Тест миграции проверяет CAS/409 после перехода.
 
@@ -40,6 +42,7 @@ ClientInteraction с client/created_by PROTECT, четырьмя типами, �
 
 Доказательства без самих данных: [integrity.json](validation/iteration7/integrity.json). AST-сравнение подтверждает неизменность прежних моделей/форм и всех прежних функций/views кроме необходимого расширения ClientDetailView и сообщения ClientDeleteView. Services/kanban.py/kanban.js и старые тесты совпадают с iteration-6c. Логика авторизации/автоматизации/Task.save/Decimal/просрочки/Deal CAS не изменялась. Исторический STAGE6C_VERIFICATION.md сохранён.
 
+<a id="http-checks"></a>
 ## HTTP и Chromium
 
 Сохранён скрипт `scripts/verify_iteration7.py`. Использует отдельную временную SQLite, случайные секрет/пароли в памяти, вымышленных администратора и двух менеджеров; всегда останавливает сервер в finally и удаляет временную БД. Playwright/Chromium — отдельные инструменты проверки, не новые runtime-зависимости приложения.
@@ -51,7 +54,7 @@ python scripts/verify_iteration7.py --python /path/to/app-venv/bin/python \
 
 По умолчанию порт 8067, можно задать --port. Скрипт запускается Python, которому доступен Playwright; --python указывает на Django venv. При отсутствии Playwright установите его в отдельное окружение проверки, например `python3.12 -m venv /tmp/crm-browser`, `/tmp/crm-browser/bin/pip install playwright`, затем укажите установленный Chromium через --chromium. Requirements приложения ради этого не менять.
 
-Фактическая команда в облачной среде: `python -u scripts/verify_iteration7.py --python /workspace/venvs/crm_diplom/bin/python --artifacts /workspace/validation/iteration7`, exit 0. Полный вывод — [e2e.log](validation/iteration7/e2e.log).
+Фактическая команда в облачной среде: `python -u scripts/verify_iteration7.py --python /workspace/venvs/crm_diplom/bin/python --artifacts /workspace/validation/iteration7`, exit 0. Существенные результаты e2e.log сохранены в [этом разделе](#http-checks), исходный вывод — в Git.
 
 - Реальный HTTP: четыре типа обеими ролями, автор сервера/подмена metadata, CSRF missing/valid, ошибки темы/типа/клиента/будущего времени с сохранением текста, доступ двух менеджеров/чужие прямые GET/POST, поиск/клиент/администратор, редактирование чужого администратором с сохранением автора, protected client, GET-подтверждение/POST-удаление. История не изменила прежние записи клиента/заявки/задачи/сделки. Отказы проверены HTTP-статусами 403/404 и безопасными login redirect, а не скрытием кнопок.
 - Chromium 154.0.8037.57, 1440/1280/768/375 px: поиск/тип/клиент/порядок/вторая страница/параметры; 10 последних в клиенте и ссылка продолжения; создание, будущая дата и сохранение полей, исправление/отправка клавиатурой, экранирование, редактирование; администратор — отмена и подтверждение удаления. Длинные имена/темы, отсутствие переполнения страницы. Снимки списка/формы/карточки/подтверждения просмотрены, ошибки формы читаемы.
@@ -61,8 +64,12 @@ python scripts/verify_iteration7.py --python /path/to/app-venv/bin/python \
 
 ## Изменённые файлы и ограничения
 
-Изменены: crm/models.py, forms.py, views.py, urls.py; crm/templates/crm/base.html и client_detail.html; README.md; docs/PROGRESS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE_DECISIONS.md, AUDIT_HANDOFF.md. Добавлены: crm/migrations/0006_clientinteraction.py; четыре crm/templates/crm/clientinteraction_{list,form,detail,confirm_delete}.html; crm/test_interactions.py; scripts/verify_iteration7.py; этот отчёт; docs/validation/iteration7/{baseline.log,checks.json,e2e.log,integrity.json}. Полный diff после коммита: `git diff iteration-6c HEAD`.
+Изменены: crm/models.py, forms.py, views.py, urls.py; crm/templates/crm/base.html и client_detail.html; README.md; docs/PROGRESS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE_DECISIONS.md, AUDIT_HANDOFF.md. Добавлены: crm/migrations/0006_clientinteraction.py; четыре crm/templates/crm/clientinteraction_{list,form,detail,confirm_delete}.html; crm/test_interactions.py; scripts/verify_iteration7.py; этот отчёт; docs/validation/iteration7/{baseline.log,checks.json,e2e.log,integrity.json}. Полный diff после коммита: `git diff iteration-6c iteration-7`.
 
 История редактируемая, не отдельный неизменяемый аудит; конкурентные формы истории без version/CAS. Автор/даты гарантируются формами/серверным HTTP, прямой ORM доверенный. PROTECT требует деактивации автора вместо удаления. Клиенты общие по прежней политике; dropdown клиента без пагинации; SQLite кириллический поиск/финансовые ограничения остаются. Native datetime-local зависит от региональных настроек браузера, подпись/отображение приложения — UTC. Нагрузка, полный WCAG, реальные touch-устройства, другие браузеры/СУБД и production не проверены. Нет email-отправки/телефонии/календарей/дополнительной автоматизации/графиков.
 
 Ручная приёмка: на резервной копии своей БД примените 0006; под двумя менеджерами создайте записи одного клиента, проверьте изоляцию через список/поиск/URL/карточку. Под администратором измените чужую запись и проверьте прежнего автора, затем отмену/подтверждение удаления. Проверьте четыре типа, даты past/now/future UTC, длинный текст, 10+ записей и ссылку продолжения, телефон/клавиатуру/календарь. Проверьте блокировку удаления клиента/автора, регрессию Kanban 409/обновления и автоматической задачи. Рекомендуемый этап 8 — сначала согласовать метрики/конверсию и денежную точность; он не начат.
+
+## Сводка сохранённых исходных выводов
+
+Python 3.12.14, Django 5.2.18. Все перечисленные тестовые прогоны завершились OK/exit 0: исходные 205 — 6.172 с; `python manage.py test`: 231 — 6.120 с; `python manage.py test crm.test_interactions`: 26 — 0.629 с. Время — факт конкретного запуска, не сравнение производительности. Команды, коды остальных проверок и оговорка недоступного pip-кэша сохранены выше.

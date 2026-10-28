@@ -1,8 +1,0 @@
-HTTP admin/two managers/all/30d/custom: independent fixture counts, Decimal totals/conversion, current workload and bad dates OK. Scoped real overflow returns 200/unavailable, no false sum or private details.
-Chromium 1440px JS off: period form/keyboard, scoped controls, date errors, current workload/no overflow OK.
-Chromium 1280px JS off: period form/keyboard, scoped controls, date errors, current workload/no overflow OK.
-Chromium 768px JS off: period form/keyboard, scoped controls, date errors, current workload/no overflow OK.
-Chromium 375px JS off: period form/keyboard, scoped controls, date errors, current workload/no overflow OK.
-Kanban JS=False: actual stale 409, refresh and successful retry OK.
-Kanban JS=True: actual stale 409, refresh and successful retry OK.
-No pageerror/HTTP 5xx; schema unchanged; fictional database/server removed.

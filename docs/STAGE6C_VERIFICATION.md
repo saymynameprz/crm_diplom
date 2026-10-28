@@ -1,5 +1,7 @@
 # Проверка стабилизации 6C — 26.10.2026
 
+Исторический протокол своего этапа. При очистке 28.10.2026 обычные выводы запусков свёрнуты в этот документ; исходные файлы доступны в Git `3b1f0d7da4ef3c102158c9784c218b325d8ff49a` / `before-repository-cleanup-2026-10-28`. [Восстановление и перечень](PROGRESS.md#repository-cleanup). Результаты ниже не выдаются за новый запуск при очистке.
+
 База: `ba4badf75342749535b1fcb50c4384eebf559525`, чистое дерево перед работой. До изменений сохранён тег `iteration-6b2`. Python 3.12.14, Django 5.2.18. Исходный полный набор — **193/193 OK, exit 0**; итог — **205/205 OK, exit 0**. Добавлены 12 методов `crm.test_stage_conflicts`, прежние методы/проверки не удалены. Это стабилизация 6C, итерация 7 не начата.
 
 ## Атомарность и границы
@@ -66,8 +68,9 @@ updated_at выбран вместо expected_stage ради ABA (A→B→A). П
 | python -m pip check | No broken requirements found | 0 |
 | node --check crm/static/crm/kanban.js | Синтаксис корректен | 0 |
 
-Полный вывод: [baseline.log](validation/stage6c/baseline.log), [checks.json](validation/stage6c/checks.json), [e2e.log](validation/stage6c/e2e.log). pip сообщил лишь об отключённом недоступном кэше, проверка зависимостей успешна.
+Исходные baseline.log/checks.json/e2e.log доступны в Git по указанной выше контрольной точке. Существенные результаты сохранены в таблице команд, [разделе HTTP/Chromium](#http-checks) и сводке времён ниже. pip сообщил лишь об отключённом недоступном кэше, проверка зависимостей успешна.
 
+<a id="http-checks"></a>
 ## HTTP и Chromium
 
 Сохранён `scripts/verify_stage6c.py` без новых runtime-зависимостей приложения. Для него отдельно нужны установленный Playwright Python и Chromium. Если они уже доступны, команда из корня:
@@ -90,6 +93,10 @@ python scripts/verify_stage6c.py --python /path/to/app-venv/bin/python \
 
 Модели/сервисы/миграции/requirements не менялись. До изменений сделана backup-копия development SQLite вне Git; сравнение всех строк всех таблиц и sqlite_master после тестов идентично. [data-integrity.log](validation/stage6c/data-integrity.log) содержит digest без персональных данных. Резервная БД не включена в репозиторий/ZIP. Исходная стабильная версия доступна по iteration-6b2.
 
-Изменены: README.md; crm/forms.py, views.py, static/crm/kanban.js, templates/crm/_kanban_card.html и deal_stage_error.html; прежние test_kanban.py и test_dragdrop.py; docs/PROGRESS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE_DECISIONS.md, AUDIT_HANDOFF.md. Добавлены: crm/templates/crm/deal_stage_conflict.html, crm/test_stage_conflicts.py, scripts/verify_stage6c.py, этот отчёт и docs/validation/stage6c/{previous-tests.diff,baseline.log,checks.json,e2e.log,data-integrity.log}. Diff всей итерации: `git diff iteration-6b2 HEAD` после итогового коммита.
+Изменены: README.md; crm/forms.py, views.py, static/crm/kanban.js, templates/crm/_kanban_card.html и deal_stage_error.html; прежние test_kanban.py и test_dragdrop.py; docs/PROGRESS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE_DECISIONS.md, AUDIT_HANDOFF.md. Добавлены: crm/templates/crm/deal_stage_conflict.html, crm/test_stage_conflicts.py, scripts/verify_stage6c.py, этот отчёт и docs/validation/stage6c/{previous-tests.diff,baseline.log,checks.json,e2e.log,data-integrity.log}. Diff всей итерации: `git diff iteration-6b2 iteration-6c` после итогового коммита.
 
 Человеку: две вкладки одной сделки под двумя имеющими доступ пользователями, первый перенос/второй конфликт/обновление/повтор; текущий и старый same-stage; переназначение старой карточки; телефон/прокрутка/форма/клавиатура, сеть/сессия. Проверьте границы денег через форму, не создавайте некорректные суммы в пользовательской БД. FR-06 реализован только для заявки, CSS локальный вместо Bootstrap — явные ограничения MVP без правки ТЗ. Нагрузку, полный WCAG, физический touch DnD, другой браузер/СУБД и production не проверяли. План: 7 взаимодействия, 8 аналитика, 9 финальный аудит/диплом. Ничего из этапа 7 не реализовано.
+
+## Сводка сохранённых исходных выводов
+
+Python 3.12.14, Django 5.2.18. Все перечисленные тестовые прогоны завершились OK/exit 0: исходные 193 — 5.403 с; `python manage.py test`: 205 — 5.703 с; `python manage.py test crm.test_deals crm.test_kanban crm.test_dragdrop`: 54 — 1.312 с. Время — факт конкретного запуска, не сравнение производительности. Команды, коды остальных проверок и оговорка недоступного pip-кэша сохранены выше.

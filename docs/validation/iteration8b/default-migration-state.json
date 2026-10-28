@@ -1,5 +1,0 @@
-{
-  "migrate_check_exit": 1,
-  "output": "",
-  "showmigrations": "crm\n [X] 0001_initial\n [X] 0002_clientrequest\n [X] 0003_task\n [X] 0004_task_is_automatic_alter_task_title_and_more\n [X] 0005_deal\n [ ] 0006_clientinteraction\n"
-}

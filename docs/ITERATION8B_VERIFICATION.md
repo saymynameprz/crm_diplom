@@ -1,5 +1,7 @@
 # Итерация 8Б — визуальный отчёт, 26.10.2026
 
+Исторический протокол своего этапа. При очистке 28.10.2026 обычные выводы запусков свёрнуты в этот документ; исходные файлы доступны в Git `3b1f0d7da4ef3c102158c9784c218b325d8ff49a` / `before-repository-cleanup-2026-10-28`. [Восстановление и перечень](PROGRESS.md#repository-cleanup). Результаты ниже не выдаются за новый запуск при очистке.
+
 Исходный HEAD `1872c13a6bd6352f33d5e6c02d6dba991798ab06`, чистый Git до изменений, стабильный тег `iteration-8a`. Python 3.12.14 / Django 5.2.18. Исходные **252 теста OK, exit 0**, итоговые **267 OK, exit 0**; новый модуль `crm.test_analytics_charts` — **15 OK, exit 0**. Прежние тесты не изменены. Этап 9 не начат.
 
 ## Диаграммы и источники
@@ -44,7 +46,7 @@ All/30d/custom, UTC, границы/формулы 8А сохранены. По�
 | node --check crm/static/crm/kanban.js | Синтаксис корректен | 0 |
 | git diff --check | Whitespace ошибок нет | 0 |
 
-Вывод: [baseline.log](validation/iteration8b/baseline.log), [checks.json](validation/iteration8b/checks.json), [default-migration-state.json](validation/iteration8b/default-migration-state.json). pip сообщил только о недоступном кэше. Новых моделей/миграций нет. Рабочую SQLite не изменяли, hash совпадает до/после; проверки выполнялись на независимой полностью мигрированной копии, HTTP/Chromium — на чистой временной SQLite. Перед локальным запуском на своей БД нужны backup, `python manage.py showmigrations crm`, `python manage.py migrate --noinput`, `python manage.py migrate --check` и перезапуск сервера. Исходный exit 1 не скрыт и не выдан за новую миграцию 8Б.
+Существенные сведения baseline.log/checks.json/default-migration-state.json сохранены в таблице команд и сводке ниже; полные исходники доступны в Git по контрольной точке в начале документа. pip сообщил только о недоступном кэше. Новых моделей/миграций нет. Рабочую SQLite не изменяли, hash совпадает до/после; проверки выполнялись на независимой полностью мигрированной копии, HTTP/Chromium — на чистой временной SQLite. Перед локальным запуском на своей БД нужны backup, `python manage.py showmigrations crm`, `python manage.py migrate --noinput`, `python manage.py migrate --check` и перезапуск сервера. Исходный exit 1 не скрыт и не выдан за новую миграцию 8Б.
 
 Отдельное наблюдение: при дополнительном изолированном запуске `python manage.py test crm.test_analytics` все 21 тест прошли с exit 0, но после завершения тестов появилось отложенное `Exception ignored ... cursor.close(): Cannot operate on a closed database` от ORM-генератора. Сохранён полный вывод [legacy-analytics.log](validation/iteration8b/legacy-analytics.log). В исходном полном наборе 252, двух полных прогонах 267 и HTTP/Chromium оно не повторилось. Это наблюдение в сценарии намеренно повреждённых денег не объявляется исправленным: аналитика 8А и её логирование не менялись. Жизненный цикл курсора при ошибке ORM следует проверить на финальном аудите; необработанного HTTP 500 не было.
 
@@ -52,11 +54,12 @@ All/30d/custom, UTC, границы/формулы 8А сохранены. По�
 
 15 новых методов вместе с 252 неизменными регрессиями охватывают 44 сценария задания. Проверены обе диаграммы/все значения/порядок enum/знаменатели/100%/нули, отсутствие NaN/Infinity и произвольных style, подписи/таблицы/ARIA/уникальные IDs, helper без БД/мутаций, все периоды/полуоткрытый конец/created_at против occurred_at, текущие просрочки без периода, деньги/большой итог/неизменная конверсия, реальные ORM overflow/200/нет ложного нуля, unknown stage/type, роли/anonymous/скрытые атрибуты и SQL 5/2. Прежние CRUD, автоматизация, deadline, история, HTML/JSON и CAS409 сохраняются полным набором.
 
+<a id="http-checks"></a>
 ## HTTP и независимые контроли
 
 Скрипт `scripts/verify_iteration8b.py` сохраняет независимую fixture-проверку чисел 8А и добавляет сверку фактических CSS-ширин/текста с отдельно рассчитанными Decimal-долями. Для администратора/двух менеджеров проверены all/30d/custom, ошибки дат, доступ anonymous; отдельные активные фиктивные пользователи дают пустоту и один этап. Общий клиент не раскрывает чужие числа. Реальный ORM overflow в чужой won не ломает сумму первого менеджера, владелец/admin получают 200 с недоступной суммой без исключения в HTML. Unknown stage подавляет полную диаграмму без вывода сырого значения.
 
-Контроль менеджера за период: new/contact/proposal/won/lost = 1/1/1/3/2, total 8, столбцы 12,5/12,5/12,5/37,5/25,0%; conversion 60,0%, сумма 10000000000,02 ₽. Типы 2/1/3/1, total 7 →28,6/14,3/42,9/14,3%. Просрочки: заявки 1 из1 →100%, задачи 1 из3 →33,3%. Только proposal с тремя сделками —100%, остальные этапы0, конверсия «Нет данных». Пустота — нулевые числа/полосы, неопределённые доли. Контрольные суммы ролей [controls.json](validation/iteration8b/controls.json), вывод [e2e.log](validation/iteration8b/e2e.log).
+Контроль менеджера за период: new/contact/proposal/won/lost = 1/1/1/3/2, total 8, столбцы 12,5/12,5/12,5/37,5/25,0%; conversion 60,0%, сумма 10000000000,02 ₽. Типы 2/1/3/1, total 7 →28,6/14,3/42,9/14,3%. Просрочки: заявки 1 из1 →100%, задачи 1 из3 →33,3%. Только proposal с тремя сделками —100%, остальные этапы0, конверсия «Нет данных». Пустота — нулевые числа/полосы, неопределённые доли. Контрольные суммы ролей [контрольная таблица 8А](ITERATION8A_VERIFICATION.md#control-values), вывод [сводка HTTP/Chromium](#http-checks).
 
 ## Chromium, визуальная проверка и доступность
 
@@ -64,7 +67,7 @@ All/30d/custom, UTC, границы/формулы 8А сохранены. По�
 
 Каждая диаграмма имеет видимый заголовок, figure/figcaption и описание знаменателя; числа/проценты видимы без hover, таблицы с caption/thead сохранены. Декоративные track/fill aria-hidden, содержательная подпись доступна текстом. Канбан-палитра использована по тем же цветовым семействам; график не требует различать цвета. Без нового JS/SVG/CDN/библиотек, без анимаций/переходов; предпочтение reduced-motion не требует отключать движение, которого нет. На других страницах analytics.css не подключается.
 
-Проверены выбранные контрастные пары: #172b4d на white —14,10:1; #536580 на white —5,93:1; основной текст на #f8faff —13,50:1; ошибка #8c2020 на white —8,96:1. [contrast.json](validation/iteration8b/contrast.json). Это базовая проверка отдельных цветов/имён/клавиатуры, не полный WCAG-аудит или проверка всех assistive technologies.
+Проверены выбранные контрастные пары: #172b4d на white —14,10:1; #536580 на white —5,93:1; основной текст на #f8faff —13,50:1; ошибка #8c2020 на white —8,96:1. Отдельный contrast.json свёрнут: все четыре пары и значения приведены в этом абзаце; оригинал доступен в Git. Это базовая проверка отдельных цветов/имён/клавиатуры, не полный WCAG-аудит или проверка всех assistive technologies.
 
 Kanban на 1280 с JS off/on: реальное изменение второй вкладкой, устаревшая HTML-форма/нативный DnD получают 409, обновление выдаёт свежую версию, повтор успешен. Нет pageerror/неожиданных HTTP 5xx. Все данные вымышленные, временная БД и сервер удалены; рабочие записи не затронуты.
 
@@ -79,8 +82,16 @@ python scripts/verify_iteration8b.py --python /path/to/app-venv/bin/python \
 
 ## Файлы, ограничения и завершение
 
-Изменены crm/views.py (только контекст analytics), templates/crm/analytics.html и base.html (пустой styles block для точечного CSS); README.md; docs/PROGRESS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE_DECISIONS.md, AUDIT_HANDOFF.md; ANALYTICS_METRICS.md только дополнен представлением. Новые: crm/analytics_presentation.py, static/crm/analytics.css, templates/crm/_analytics_bars.html, test_analytics_charts.py; scripts/verify_iteration8b.py; этот протокол; восемь файлов docs/validation/iteration8b/{baseline.log,checks.json,default-migration-state.json,controls.json,e2e.log,integrity.json,contrast.json,legacy-analytics.log}. Полный diff после коммита: `git diff iteration-8a HEAD`.
+Изменены crm/views.py (только контекст analytics), templates/crm/analytics.html и base.html (пустой styles block для точечного CSS); README.md; docs/PROGRESS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE_DECISIONS.md, AUDIT_HANDOFF.md; ANALYTICS_METRICS.md только дополнен представлением. Новые: crm/analytics_presentation.py, static/crm/analytics.css, templates/crm/_analytics_bars.html, test_analytics_charts.py; scripts/verify_iteration8b.py; этот протокол; восемь файлов docs/validation/iteration8b/{baseline.log,checks.json,default-migration-state.json,controls.json,e2e.log,integrity.json,contrast.json,legacy-analytics.log}. Полный diff после коммита: `git diff iteration-8a before-repository-cleanup-2026-10-28`.
 
 Ограничения 8А сохранены: SQLite/ORM может скрыть лишние знаки исходных денег, общего снимка нескольких SELECT нет, даты закрытия/история этапов/платежи не хранятся. Визуальное округление долей не меняет точные количества. Отдельное наблюдение ORM-курсора выше оставлено явным. Нагрузку, production, полный WCAG, реальные мобильные устройства/все браузеры не проверяли. Native date input зависит от браузерных региональных настроек, серверные подписи/период — UTC.
 
 Ручная приёмка: на резервной копии применить существующие миграции; две роли/два менеджера, all/30d/custom/конечный день/неверные даты, все этапы/типы/нули/один этап, точные суммы/конверсия, текущие просрочки независимо от периода, телефон/клавиатура/видимые числа. Не повреждать деньги в рабочей БД. Визуальный отчёт готов к отдельному финальному этапу9 с указанными ограничениями; финальный аудит, дипломные выводы, экспорт/платежи/интеграции/production не реализованы и не начаты.
+
+## Сводка сохранённых исходных выводов
+
+Python 3.12.14, Django 5.2.18. Все перечисленные тестовые прогоны завершились OK/exit 0: исходные 252 — 7.052 с; `python manage.py test`: 267 — 9.082 с; `python manage.py test crm.test_analytics_charts`: 15 — 0.265 с. Время — факт конкретного запуска, не сравнение производительности. Команды, коды остальных проверок и оговорка недоступного pip-кэша сохранены выше.
+
+Состояние исходной рабочей SQLite из default-migration-state.json: `[X] 0001_initial`–`0005_deal`, `[ ] 0006_clientinteraction`; `migrate --check` — 1. На подготовленной полностью мигрированной копии — 0. Рабочие данные не менялись.
+
+controls.json побайтово совпадал с контролями 8А: admin all/cohort/conversion = 10000000780.90/10000000778.90/62.5; manager = 10000000002.02/10000000000.02/60.0; other = 777.77/777.77/50.0. Каноническая таблица — в протоколе 8А. Дополнительный изолированный `crm.test_analytics`: 21 OK за 0.629 с, exit 0, затем отложенная ошибка курсора; полный исходный вывод оставлен в legacy-analytics.log.
