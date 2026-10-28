@@ -16,7 +16,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.views.csrf import csrf_failure as default_csrf_failure
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.views.decorators.cache import never_cache
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
@@ -31,6 +31,11 @@ from .forms import (OptimizationForm, OptimizationSizeForm, OPTIMIZATION_BODY_LI
                     OPTIMIZATION_NODE_LIMIT, OPTIMIZATION_TIME_LIMIT)
 from .optimization import greedy, branch_and_bound, Status, Result
 from .optimization_presentation import input_rows, present_result, compare_results
+from .forms import (OptimizationSnapshotForm, OptimizationDetailsForm, OptimizationFinalForm,
+                    OPTIMIZATION_COMMIT_BODY_LIMIT)
+from .models import OptimizationCommit
+from .optimization_commit import (CommitError, issue_snapshot, read_snapshot, decode_snapshot,
+                                  prepare_snapshot, commit_snapshot)
 
 logger = logging.getLogger(__name__)
 
@@ -570,6 +575,7 @@ def optimization(request):
             context["comparison"] = compare_results(g, b)
             context["rescued"] = g.status == Status.HEURISTIC_FAILED and b.assignment is not None
             context["results"] = (g, b)
+            context["snapshot"] = issue_snapshot(form, b, request.user)
         except Exception:
             # Only the web boundary converts failures; M2 still raises bugs in direct tests.
             logger.exception("Технический отказ расчёта оптимизации")
@@ -578,3 +584,136 @@ def optimization(request):
             status = 503
     context["employee_rows"], context["request_rows"] = input_rows(form)
     return render(request, "crm/optimization.html", context, status=status)
+
+
+def _optimization_admin(request):
+    if not (request.user.is_active and request.user.is_superuser):
+        raise PermissionDenied
+
+
+def _optimization_post(request):
+    try:
+        if int(request.META.get("CONTENT_LENGTH") or 0) > OPTIMIZATION_COMMIT_BODY_LIMIT:
+            raise ValueError
+    except ValueError as error:
+        raise CommitError("Слишком большой запрос подтверждения (предел 256 КиБ).", 400) from error
+    return request.POST
+
+
+def _optimization_preview_context(verified):
+    form, result, payload = verified.form, verified.result, verified.payload
+    titles = {int(form.cleaned_data[f"request_id_{i}"]): form.cleaned_data[f"title_{i}"]
+              for i in range(form.request_count)}
+    names = {int(pk): name for pk, name in payload["users"].items()}
+    employees, requests = input_rows(form)
+    return {"recommendation": present_result(result, titles, names), "source_employees": employees,
+            "source_requests": requests, "source_form": form,
+            "package_rows": [{"id": i, "title": titles[i], "employee": names[j]}
+                             for i, j in result.assignment]}
+
+
+def _optimization_error(request, error, retry_form=None):
+    if error.status >= 500 and error.__cause__ is not None:
+        cause = error.__cause__
+        logger.error("Ошибка базы данных при подтверждении оптимизации",
+                     exc_info=(type(cause), cause, cause.__traceback__))
+    return render(request, "crm/optimization_confirm.html", {
+        "error": error.message, "retry_form": retry_form if error.retry else None,
+    }, status=error.status)
+
+
+@never_cache
+@login_required
+@require_POST
+def optimization_prepare(request):
+    _optimization_admin(request)
+    try:
+        form = OptimizationSnapshotForm(_optimization_post(request))
+        if not form.is_valid():
+            raise CommitError("Не удалось прочитать снимок расчёта.", 400)
+        raw = form.cleaned_data["snapshot"]
+        verified = read_snapshot(raw, request.user)
+        details_form = OptimizationDetailsForm(local_ids=[i for i, _ in verified.result.assignment],
+            initial={"snapshot": raw, "horizon_start": timezone.now()})
+        context = _optimization_preview_context(verified)
+        context["details_form"] = details_form
+        return render(request, "crm/optimization_confirm.html", context)
+    except CommitError as error:
+        return _optimization_error(request, error)
+    except Exception:
+        logger.exception("Не удалось подготовить подтверждение оптимизации")
+        return _optimization_error(request, CommitError("Не удалось подготовить пакет. Повторите расчёт.", 503))
+
+
+@never_cache
+@login_required
+@require_POST
+def optimization_preview(request):
+    _optimization_admin(request)
+    try:
+        data = _optimization_post(request)
+        raw_form = OptimizationSnapshotForm({"snapshot": data.get("snapshot", "")})
+        if not raw_form.is_valid():
+            raise CommitError("Некорректный снимок расчёта.", 400)
+        verified = read_snapshot(raw_form.cleaned_data["snapshot"], request.user)
+        details_form = OptimizationDetailsForm(data, local_ids=[i for i, _ in verified.result.assignment])
+        context = _optimization_preview_context(verified)
+        if not details_form.is_valid():
+            context["details_form"] = details_form
+            return render(request, "crm/optimization_confirm.html", context, status=400)
+        signed = prepare_snapshot(verified, details_form, request.user)
+        for row in context["package_rows"]:
+            row["client"] = details_form.cleaned_data[f"client_{row['id']}"]
+            row["description"] = details_form.cleaned_data[f"description_{row['id']}"]
+        context.update(horizon_start=details_form.cleaned_data["horizon_start"],
+                       due_at=details_form.cleaned_data["due_at"], prepared=True,
+                       final_form=OptimizationFinalForm(initial={"snapshot": signed},
+                           unproven=verified.result.status == Status.FEASIBLE_NOT_PROVEN))
+        return render(request, "crm/optimization_confirm.html", context)
+    except CommitError as error:
+        return _optimization_error(request, error)
+    except Exception:
+        logger.exception("Не удалось проверить предпросмотр оптимизации")
+        return _optimization_error(request, CommitError("Не удалось проверить предпросмотр. Повторите подготовку.", 503))
+
+
+@never_cache
+@login_required
+@require_POST
+def optimization_confirm(request):
+    _optimization_admin(request)
+    form = None
+    try:
+        data = _optimization_post(request)
+        raw_form = OptimizationSnapshotForm({"snapshot": data.get("snapshot", "")})
+        if not raw_form.is_valid():
+            raise CommitError("Некорректный снимок подтверждения.", 400)
+        payload = decode_snapshot(raw_form.cleaned_data["snapshot"], request.user, stage="prepared", allow_expired=True)
+        form = OptimizationFinalForm(data, unproven=payload["plan"]["status"] == Status.FEASIBLE_NOT_PROVEN.value)
+        if not form.is_valid():
+            return _optimization_error(request, CommitError("Подтвердите пакет и необходимые согласия. Данные не созданы.", 400, retry=True), form)
+        record = commit_snapshot(form.cleaned_data["snapshot"], request.user,
+                                 accept_unproven=form.cleaned_data.get("accept_unproven", False))
+        return redirect("optimization_result", token=record.token)
+    except CommitError as error:
+        return _optimization_error(request, error, form)
+    except Exception:
+        logger.exception("Не удалось атомарно создать пакет оптимизации")
+        return _optimization_error(request, CommitError("Пакет не подтверждён. Повторите это же подтверждение; токен защищает от дублей.", 503, retry=True), form)
+
+
+@never_cache
+@login_required
+@require_GET
+def optimization_result(request, token):
+    _optimization_admin(request)
+    try:
+        record = OptimizationCommit.objects.get(token=token, created_by=request.user)
+    except OptimizationCommit.DoesNotExist:
+        raise Http404
+    requests = ClientRequest.objects.in_bulk([r["request_id"] for r in record.created_ids])
+    tasks = Task.objects.in_bulk([r["task_id"] for r in record.created_ids])
+    users = get_user_model().objects.in_bulk([r["employee_id"] for r in record.created_ids])
+    rows = [{**r, "request": requests.get(r["request_id"]), "task": tasks.get(r["task_id"]),
+             "employee": users.get(r["employee_id"])} for r in record.created_ids]
+    return render(request, "crm/optimization_confirm.html", {"commit": record, "created_rows": rows})

@@ -100,6 +100,11 @@
     <p>Относительное улучшение F: {% if comparison.gain != None %}<strong>{{ comparison.gain }}%</strong>{% else %}не определено при нулевой базе{% endif %}.</p>
     {% endif %}
     <p>Изменение расчётных затрат не подтверждает экономию фактических выплат. Снижение трудозатрат не гарантирует более раннее календарное завершение. Оценки и веса можно исправить в форме и пересчитать.</p>
+    {% if snapshot %}<form method="post" action="{% url 'optimization_prepare' %}">
+        {% csrf_token %}<input type="hidden" name="snapshot" value="{{ snapshot }}">
+        <p>Полный план B&amp;B можно подготовить к созданию. Клиенты, общий срок и окончательное согласие запрашиваются отдельно.</p>
+        <button type="submit">Подготовить пакет заявок</button>
+    </form>{% endif %}
 </section>
 {% endif %}
 <p><a href="{% url 'optimization' %}">Новый пустой расчёт</a></p>

@@ -1,0 +1,86 @@
+{% extends "crm/base.html" %}
+{% load tz %}
+{% block title %}Подтверждение распределения{% endblock %}
+{% block card_class %}optimization-shell{% endblock %}
+{% block content %}
+<h1>{% if commit %}Результат создания пакета{% else %}Подтверждение распределения{% endif %}</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if retry_form %}
+<form method="post" action="{% url 'optimization_confirm' %}">
+    {% csrf_token %}{{ retry_form.snapshot }}{{ retry_form.non_field_errors }}
+    {% for field in retry_form.visible_fields %}{{ field.as_field_group }}{% endfor %}
+    <button type="submit">Повторить это же подтверждение</button>
+</form>
+{% endif %}
+{% if commit %}
+<p class="notice"><strong>Весь пакет успешно подтверждён.</strong> Создано заявок: {{ created_rows|length }}. Повтор этого токена возвращает те же ID без повторного создания.</p>
+<p>Подтверждено {{ commit.created_at|utc|date:"d.m.Y H:i:s" }} UTC.</p>
+<div class="optimization-scroll" role="region" aria-label="Созданные записи" tabindex="0">
+    <table class="optimization-assignments"><caption>Заявки и их единственные автоматические задачи</caption>
+        <thead><tr><th scope="col">Локальный ID</th><th scope="col">Заявка</th><th scope="col">Автоматическая задача</th><th scope="col">Назначен при создании</th></tr></thead>
+        <tbody>{% for row in created_rows %}<tr>
+            <th scope="row">{{ row.local_id }}</th>
+            <td>{% if row.request %}<a href="{{ row.request.get_absolute_url }}">№{{ row.request_id }} — {{ row.request.title }}</a>{% else %}№{{ row.request_id }} — запись удалена{% endif %}</td>
+            <td>{% if row.task %}<a href="{{ row.task.get_absolute_url }}">Задача №{{ row.task_id }}</a>{% else %}№{{ row.task_id }} — запись удалена{% endif %}</td>
+            <td>{% if row.employee %}{{ row.employee.username }}{% else %}Пользователь №{{ row.employee_id }} удалён{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+    </table>
+</div>
+<p>Система создаёт заявки по оптимизированному экспертному распределению, но не обеспечивает глобального резервирования рабочего времени между всеми операциями CRM.</p>
+{% endif %}
+{% if recommendation %}
+<p class="notice">Данные ещё не созданы. Используется один полный план <strong>branch and bound</strong>. Снимок действует 15 минут от исходного расчёта; его подпись проверяет целостность, а не фактическую актуальность экспертных часов.</p>
+<p class="{% if recommendation.warning %}error{% else %}notice{% endif %}"><strong>{{ recommendation.description }}</strong> <code>{{ recommendation.status }}</code>. {{ recommendation.reason }}</p>
+<dl class="optimization-metrics">
+    <div><dt>Расчётные затраты C</dt><dd>{{ recommendation.metrics.cost }} ₽</dd></div>
+    <div><dt>Максимальная загрузка U</dt><dd>{{ recommendation.metrics.utilization }}%</dd></div>
+    <div><dt>Трудозатраты T</dt><dd>{{ recommendation.metrics.labor }} чел.-ч</dd></div>
+    <div><dt>F</dt><dd>{{ recommendation.metrics.objective }}; точно {{ recommendation.metrics.exact_objective }}</dd></div>
+</dl>
+<h2>Исходные экспертные оценки</h2>
+<p>Веса α={{ source_form.alpha.value }}, β={{ source_form.beta.value }}. Мощности и трудоёмкости ниже — часы:минуты; ставки — ₽/ч. Часы не выводятся из календарной разницы или количества задач.</p>
+<div class="optimization-scroll" role="region" aria-label="Экспертные мощности" tabindex="0">
+    <table class="optimization-assignments"><caption>Сотрудники и мощности исходного расчёта</caption>
+        <thead><tr><th scope="col">Сотрудник</th><th scope="col">A</th><th scope="col">L</th><th scope="col">Ставка</th><th scope="col">H, ч</th></tr></thead>
+        <tbody>{% for row in source_employees %}<tr><th scope="row">{{ row.label }}</th>{% for field in row.fields %}{% if not forloop.first %}<td>{{ field.value }}</td>{% endif %}{% endfor %}<td>{{ row.residual }}</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+<div class="optimization-scroll" role="region" aria-label="Исходная матрица" tabindex="0">
+    <table class="optimization-assignments"><caption>Пустая оценка — нет квалификации</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">Название</th>{% for row in source_employees %}<th scope="col">{{ row.label }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in source_requests %}<tr><th scope="row">{{ row.identifier.value }}</th><td>{{ row.title.value }}</td>{% for field in row.efforts %}<td>{{ field.value|default:"—" }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% if details_form %}
+<h2>Клиенты, описания и общий срок</h2>
+<form method="post" action="{% url 'optimization_preview' %}" id="optimization-details">
+    {% csrf_token %}{{ details_form.snapshot }}{{ details_form.non_field_errors }}
+    {% if details_form.errors %}<p class="error" role="alert">Исправьте отмеченные поля. Никакие заявки не созданы.</p>{% endif %}
+    {{ details_form.horizon_start.as_field_group }}{{ details_form.due_at.as_field_group }}
+    <p>Общий срок в UTC должен быть в будущем. М2 не строит расписание и не гарантирует соблюдение срока. A/L должны относиться к указанному вами горизонту.</p>
+    {% for field in details_form.visible_fields %}{% if field.name != "horizon_start" and field.name != "due_at" and field.name != "estimates_confirmed" %}{{ field.as_field_group }}{% endif %}{% endfor %}
+    <div class="optimization-scroll" role="region" aria-label="План назначения" tabindex="0">
+        <table class="optimization-assignments"><caption>Названия и ответственные из подписанного плана</caption><thead><tr><th scope="col">ID</th><th scope="col">Заявка</th><th scope="col">Ответственный</th></tr></thead><tbody>{% for row in package_rows %}<tr><th scope="row">{{ row.id }}</th><td>{{ row.title }}</td><td>{{ row.employee }}</td></tr>{% endfor %}</tbody></table>
+    </div>
+    {{ details_form.estimates_confirmed.as_field_group }}
+    <button type="submit">Проверить и показать предпросмотр</button>
+</form>
+{% endif %}
+{% if prepared %}
+<h2>Окончательный предпросмотр</h2>
+<p>Горизонт: {{ horizon_start|utc|date:"d.m.Y H:i" }} — {{ due_at|utc|date:"d.m.Y H:i" }} UTC. Общий due_at всех заявок и задач: <strong>{{ due_at|utc|date:"d.m.Y H:i" }} UTC</strong>.</p>
+<div class="optimization-scroll" role="region" aria-label="Пакет к созданию" tabindex="0">
+    <table class="optimization-assignments"><caption>Весь пакет будет создан атомарно</caption><thead><tr><th scope="col">ID</th><th scope="col">Клиент</th><th scope="col">Заявка и описание</th><th scope="col">Ответственный</th></tr></thead>
+        <tbody>{% for row in package_rows %}<tr><th scope="row">{{ row.id }}</th><td>{{ row.client.full_name }}</td><td>{{ row.title }}{% if row.description %}<p>{{ row.description|linebreaksbr }}</p>{% endif %}</td><td>{{ row.employee }}</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+<p class="error">Глобального резервирования часов нет. Внешние обязательства могли изменить фактическую занятость; проверьте оценки перед подтверждением. Создание пакета не является календарной гарантией.</p>
+<form method="post" action="{% url 'optimization_confirm' %}" id="optimization-final">
+    {% csrf_token %}{{ final_form.snapshot }}{{ final_form.non_field_errors }}
+    {% for field in final_form.visible_fields %}{{ field.as_field_group }}{% endfor %}
+    <button type="submit">Подтвердить и создать заявки</button>
+</form>
+{% endif %}
+{% endif %}
+<p><a href="{% url 'optimization' %}">Вернуться к оптимизации и новому расчёту</a></p>
+{% endblock %}

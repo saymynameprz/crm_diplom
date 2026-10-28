@@ -5,6 +5,10 @@ from . import views
 
 urlpatterns = [
     path("optimization/", views.optimization, name="optimization"),
+    path("optimization/prepare/", views.optimization_prepare, name="optimization_prepare"),
+    path("optimization/preview/", views.optimization_preview, name="optimization_preview"),
+    path("optimization/confirm/", views.optimization_confirm, name="optimization_confirm"),
+    path("optimization/result/<uuid:token>/", views.optimization_result, name="optimization_result"),
     path("analytics/", views.analytics, name="analytics"),
     path("interactions/", views.InteractionListView.as_view(), name="interaction_list"),
     path("interactions/create/", views.InteractionCreateView.as_view(), name="interaction_create"),

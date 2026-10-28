@@ -108,3 +108,4 @@ textarea { resize: vertical; }
     .optimization-metrics, .optimization-weights { grid-template-columns: minmax(0, 1fr); }
     .optimization-result { padding: .65rem; }
 }
+.optimization-shell input[type=checkbox] { width: auto; }
