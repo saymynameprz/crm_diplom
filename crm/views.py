@@ -3,9 +3,10 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, RequestDataTooBig
 from django.db import DatabaseError
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
@@ -15,7 +16,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.views.csrf import csrf_failure as default_csrf_failure
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.cache import never_cache
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 
@@ -25,6 +27,10 @@ from .services import AutomationError, create_request_with_task
 from .kanban import load_columns
 from .analytics import build_report
 from .analytics_presentation import present_report
+from .forms import (OptimizationForm, OptimizationSizeForm, OPTIMIZATION_BODY_LIMIT,
+                    OPTIMIZATION_NODE_LIMIT, OPTIMIZATION_TIME_LIMIT)
+from .optimization import greedy, branch_and_bound, Status, Result
+from .optimization_presentation import input_rows, present_result, compare_results
 
 logger = logging.getLogger(__name__)
 
@@ -516,3 +522,59 @@ def analytics(request):
     period = form.selected_period() if form.is_valid() else None
     report = build_report(request.user, period, at)
     return render(request, "crm/analytics.html", {"form": form, "report": report, "charts": present_report(report)})
+
+
+@never_cache
+@login_required
+@require_http_methods(["GET", "POST"])
+def optimization(request):
+    if not (request.user.is_active and request.user.is_superuser):
+        raise PermissionDenied
+    context = {"node_limit": OPTIMIZATION_NODE_LIMIT, "time_limit": OPTIMIZATION_TIME_LIMIT}
+    if request.method == "POST":
+        try:
+            if int(request.META.get("CONTENT_LENGTH") or 0) > OPTIMIZATION_BODY_LIMIT:
+                raise RequestDataTooBig
+        except (RequestDataTooBig, ValueError):
+            context["input_error"] = "Слишком большой запрос: допустимо не более 16 КиБ. Откройте новый расчёт."
+            return render(request, "crm/optimization.html", context, status=400)
+        data = request.POST
+    else:
+        # Only nonprivate dimensions belong in GET; expert inputs are POST-only.
+        data = request.GET.copy()
+        data.setdefault("request_count", "2")
+        data.setdefault("employee_count", "2")
+    size_form = OptimizationSizeForm(data)
+    context["size_form"] = size_form
+    if not size_form.is_valid():
+        context["input_error"] = "Выберите от 1 до 6 заявок и от 1 до 4 сотрудников."
+        return render(request, "crm/optimization.html", context, status=400)
+    users = list(get_user_model().objects.filter(is_active=True).order_by("username", "pk"))
+    form = OptimizationForm(request.POST if request.method == "POST" else None,
+                            users=users, **size_form.cleaned_data)
+    context["form"] = form
+    status = 200
+    if request.method == "POST" and form.is_valid():
+        try:
+            problem = form.to_problem()
+            g = greedy(problem)
+            b = branch_and_bound(problem, node_limit=OPTIMIZATION_NODE_LIMIT,
+                                 time_limit_seconds=OPTIMIZATION_TIME_LIMIT)
+            titles = {int(form.cleaned_data[f"request_id_{i}"]): form.cleaned_data[f"title_{i}"]
+                      for i in range(form.request_count)}
+            names = {user.pk: user.get_username() for user in users}
+            context["recommendations"] = [
+                {"name": "Жадный алгоритм", **present_result(g, titles, names)},
+                {"name": "Ветви и границы", **present_result(b, titles, names)},
+            ]
+            context["comparison"] = compare_results(g, b)
+            context["rescued"] = g.status == Status.HEURISTIC_FAILED and b.assignment is not None
+            context["results"] = (g, b)
+        except Exception:
+            # Only the web boundary converts failures; M2 still raises bugs in direct tests.
+            logger.exception("Технический отказ расчёта оптимизации")
+            failed = Result(Status.TECHNICAL_ERROR, termination_reason="calculation_failed")
+            context["recommendations"] = [{"name": "Расчёт", **present_result(failed, {}, {})}]
+            status = 503
+    context["employee_rows"], context["request_rows"] = input_rows(form)
+    return render(request, "crm/optimization.html", context, status=status)

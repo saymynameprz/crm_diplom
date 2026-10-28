@@ -1,0 +1,106 @@
+{% extends "crm/base.html" %}
+{% block title %}Оптимизация заявок{% endblock %}
+{% block card_class %}optimization-shell{% endblock %}
+{% block content %}
+<h1>Оптимизация заявок</h1>
+<p>Распределение новых планируемых работ по ручным экспертным оценкам. Данные мощности, загрузки и ставок относятся только к текущему расчёту.</p>
+<p class="notice">Рекомендация рассчитана по введённым экспертным оценкам. Она не создаёт заявки и не гарантирует календарный срок выполнения.</p>
+{% if input_error %}<p class="error" role="alert">{{ input_error }}</p>{% endif %}
+{% if size_form %}
+<form method="get" action="{% url 'optimization' %}" class="optimization-size">
+    <fieldset>
+        <legend>Размер нового расчёта</legend>
+        <p>От 1 до 6 заявок и от 1 до 4 сотрудников, до 24 оценок. Выбор размера открывает пустой набор.</p>
+        <div class="optimization-grid">
+            {{ size_form.request_count.as_field_group }}
+            {{ size_form.employee_count.as_field_group }}
+        </div>
+        <button type="submit">Открыть набор</button>
+    </fieldset>
+</form>
+{% endif %}
+{% if form %}
+<form method="post" action="{% url 'optimization' %}" id="optimization-form">
+    {% csrf_token %}
+    <input type="hidden" name="request_count" value="{{ form.request_count }}">
+    <input type="hidden" name="employee_count" value="{{ form.employee_count }}">
+    {% if form.errors %}<div class="error" role="alert">
+        <p>Исправьте отмеченные поля. Расчёт не выполнялся.</p>
+        <ul>{% for field in form %}{% if field.errors %}<li><a href="#{{ field.auto_id }}">{{ field.label }}: {{ field.errors|striptags }}</a></li>{% endif %}{% endfor %}</ul>
+    </div>{% endif %}
+    {{ form.non_field_errors }}
+    <h2>1. Сотрудники и плановый горизонт</h2>
+    <p id="hours-help">Время: часы:минуты (2:15) или десятичные часы (2.25, также 2,25). Только целые минуты, до 1000 часов. A — полная мощность за выбранный вами горизонт, L — уже занятое время; L ≤ A. Ставка от 0 до 1000000 ₽/ч, не более двух знаков после запятой.</p>
+    <div class="optimization-scroll" role="region" aria-label="Мощности сотрудников" tabindex="0">
+        <table class="optimization-table">
+            <caption>Ручные оценки {{ form.employee_count }} сотрудников; не вычисляются по задачам CRM</caption>
+            <thead><tr><th scope="col">Сотрудник</th><th scope="col">Мощность A</th><th scope="col">Занято L</th><th scope="col">Ставка</th><th scope="col">Остаток H, ч</th><th scope="col">Исходная загрузка</th></tr></thead>
+            <tbody>{% for row in employee_rows %}<tr>
+                {% for field in row.fields %}<td>{{ field.as_field_group }}</td>{% endfor %}
+                <td>{% if row.residual != None %}{{ row.residual }}{% else %}После проверки ввода{% endif %}</td>
+                <td>{% if row.initial_load != None %}{{ row.initial_load }}%{% else %}После проверки ввода{% endif %}</td>
+            </tr>{% endfor %}</tbody>
+        </table>
+    </div>
+    <h2>2. Планируемые заявки и квалификация</h2>
+    <p id="matrix-help">Локальные ID от 1 до 999999 уникальны; название до 120 символов. В каждой допустимой паре укажите положительное время. <strong>Пустая ячейка означает отсутствие квалификации.</strong> Ноль не заменяет пустую ячейку. Порядок работы алгоритмов — по возрастанию локальных ID.</p>
+    <div class="optimization-scroll" role="region" aria-label="Матрица трудоёмкости" tabindex="0">
+        <table class="optimization-table optimization-matrix">
+            <caption>{{ form.request_count }} планируемых заявок; трудоёмкость t для каждого допустимого исполнителя, ч</caption>
+            <thead><tr><th scope="col">Локальный ID</th><th scope="col">Название</th>{% for row in employee_rows %}<th scope="col">{{ row.label }}</th>{% endfor %}</tr></thead>
+            <tbody>{% for row in request_rows %}<tr>
+                <td>{{ row.identifier.as_field_group }}</td><td>{{ row.title.as_field_group }}</td>
+                {% for field in row.efforts %}<td>{{ field.as_field_group }}</td>{% endfor %}
+            </tr>{% endfor %}</tbody>
+        </table>
+    </div>
+    <fieldset>
+        <legend>3. Веса критериев</legend>
+        <p>α и β от 0 до 1, не более двух знаков после запятой; сумма точно 1. F = αC/C0 + βU. C0 задаётся моделью М1.</p>
+        <div class="optimization-weights"><div>{{ form.alpha.as_field_group }}</div><div>{{ form.beta.as_field_group }}</div></div>
+    </fieldset>
+    <p>Поиск: не более {{ node_limit }} узлов B&amp;B, защитный лимит {{ time_limit }} с. Ограничитель проверяется между узлами, поэтому не является жёстким прерыванием HTTP-запроса.</p>
+    <button type="submit">Рассчитать распределение</button>
+</form>
+{% endif %}
+{% if recommendations %}
+<section aria-labelledby="results-heading" id="optimization-results">
+    <h2 id="results-heading">Результаты расчёта</h2>
+    <p>Источник данных — ручные экспертные оценки, введённые в таблицах выше. Округление ниже используется только для отображения.</p>
+    {% if rescued %}<p class="notice">Жадный алгоритм зашёл в тупик. Глобальный поиск нашёл полный допустимый план; отказ жадного метода не доказывает невыполнимость.</p>{% endif %}
+    {% for result in recommendations %}
+    <section class="optimization-result" aria-labelledby="result-{{ forloop.counter }}">
+        <h3 id="result-{{ forloop.counter }}">{{ result.name }}</h3>
+        <p class="{% if result.warning %}error{% else %}notice{% endif %}"><strong>{{ result.description }}</strong> <code>{{ result.status }}</code></p>
+        <p>{{ result.reason }}</p>
+        <p>Посещено узлов/шагов: {{ result.nodes }}. Оптимальность доказана: {% if result.proven %}<strong>да</strong>{% else %}<strong>нет</strong>{% endif %}.</p>
+        {% if result.complete %}
+        <dl class="optimization-metrics">
+            <div><dt>Расчётные затраты C</dt><dd>{{ result.metrics.cost }} ₽</dd></div>
+            <div><dt>Максимальная загрузка U</dt><dd>{{ result.metrics.utilization }}%</dd></div>
+            <div><dt>Трудозатраты T</dt><dd>{{ result.metrics.labor }} чел.-ч</dd></div>
+            <div><dt>Целевая функция F</dt><dd>{{ result.metrics.objective }}<br><small>Точно: {{ result.metrics.exact_objective }}</small></dd></div>
+        </dl>
+        <div class="optimization-scroll" role="region" aria-label="Назначения: {{ result.name }}" tabindex="0">
+            <table class="optimization-assignments"><caption>Полное допустимое распределение: {{ result.name }}</caption><thead><tr><th scope="col">ID</th><th scope="col">Заявка</th><th scope="col">Сотрудник</th></tr></thead>
+                <tbody>{% for item in result.assignments %}<tr><th scope="row">{{ item.id }}</th><td>{{ item.title }}</td><td>{{ item.employee }}</td></tr>{% endfor %}</tbody>
+            </table>
+        </div>
+        {% else %}<p>Полного плана нет. Назначения и метрики не показаны.</p>{% endif %}
+    </section>
+    {% endfor %}
+    {% if comparison %}
+    <h3>Сравнение полных планов</h3>
+    {% if not comparison.proven %}<p class="error">B&amp;B не доказал оптимальность. Сравниваются найденные допустимые планы; глобальный оптимум неизвестен.</p>{% endif %}
+    <div class="optimization-scroll" role="region" aria-label="Сравнение метрик" tabindex="0">
+        <table class="optimization-assignments optimization-comparison"><caption>Метрики вычислены ядром М2, разность = greedy − B&amp;B</caption><thead><tr><th scope="col">Показатель</th><th scope="col">Greedy</th><th scope="col">B&amp;B</th><th scope="col">Разность</th></tr></thead>
+            <tbody>{% for row in comparison.rows %}<tr><th scope="row">{{ row.label }}</th><td>{{ row.greedy }}</td><td>{{ row.bnb }}</td><td>{{ row.difference }}</td></tr>{% endfor %}</tbody>
+        </table>
+    </div>
+    <p>Относительное улучшение F: {% if comparison.gain != None %}<strong>{{ comparison.gain }}%</strong>{% else %}не определено при нулевой базе{% endif %}.</p>
+    {% endif %}
+    <p>Изменение расчётных затрат не подтверждает экономию фактических выплат. Снижение трудозатрат не гарантирует более раннее календарное завершение. Оценки и веса можно исправить в форме и пересчитать.</p>
+</section>
+{% endif %}
+<p><a href="{% url 'optimization' %}">Новый пустой расчёт</a></p>
+{% endblock %}

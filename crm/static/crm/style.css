@@ -82,3 +82,29 @@ textarea { resize: vertical; }
 .kanban-feedback button { margin: .25rem 0 0; padding: .35rem .6rem; font-size: .85rem; }
 
 .kanban-feedback a, .kanban-feedback button { pointer-events: auto; }
+
+.optimization-shell { max-width: 74rem; min-width: 0; }
+.optimization-shell fieldset { min-width: 0; border: 1px solid #dbe2ed; border-radius: .4rem; padding: 1rem; }
+.optimization-shell legend { font-weight: 600; }
+.optimization-size { margin-bottom: 2rem; }
+.optimization-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem 1rem; align-items: center; }
+.optimization-grid label { margin: .5rem 0; }
+.optimization-weights, .optimization-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.optimization-scroll { max-width: 100%; overflow-x: auto; margin: 1rem 0 2rem; padding-bottom: .5rem; }
+.optimization-shell table { width: 100%; border-collapse: collapse; }
+.optimization-table { min-width: 52rem; table-layout: fixed; }
+.optimization-shell caption { text-align: left; font-weight: 600; padding: .5rem 0; }
+.optimization-shell th, .optimization-shell td { text-align: left; vertical-align: top; padding: .65rem .5rem; border-bottom: 1px solid #dbe2ed; overflow-wrap: anywhere; }
+.optimization-table label { margin: 0 0 .4rem; font-size: .85rem; }
+.optimization-table input:not([type=hidden]), .optimization-table select { padding: .6rem .35rem; }
+.optimization-shell .errorlist { padding-left: 1rem; }
+.optimization-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid #dbe2ed; border-radius: .5rem; }
+.optimization-assignments { min-width: 28rem; }
+.optimization-comparison td { white-space: nowrap; }
+.optimization-comparison th:first-child { min-width: 12rem; }
+.optimization-shell code { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+    .optimization-shell { padding: 1rem; }
+    .optimization-metrics, .optimization-weights { grid-template-columns: minmax(0, 1fr); }
+    .optimization-result { padding: .65rem; }
+}
