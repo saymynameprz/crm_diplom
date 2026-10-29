@@ -172,15 +172,36 @@ class OptimizationCommitTests(TestCase):
 
     def test_tampered_signature_and_mathematical_fields_are_rejected(self):
         raw = self.token();before=self.counts()
-        for section,key,value in (("plan","status","OPTIMAL"),("plan","assignment",[[1,self.manager.pk],[2,self.manager.pk]]),
+        for section,key,value in (("plan","assignment",[[1,self.manager.pk],[2,self.manager.pk]]),
                                   ("plan","metrics",{"cost":"0"}),("source","rate_0","0")):
-            payload=signing.loads(raw,salt=SALT);payload[section][key]=value
+            payload=signing.loads(raw,salt=SALT)
+            self.assertNotEqual(payload[section][key],value)
+            payload[section][key]=value
             changed=sign_snapshot(payload)
             bad=changed.rsplit(":",1)[0]+":"+raw.rsplit(":",1)[1]
-            if changed==raw:
-                bad=raw+"x"
             self.assertEqual(self.post(bad).status_code,400)
             self.assertEqual(self.counts(),before)
+
+    def test_unproven_status_upgrade_with_original_signature_is_rejected(self):
+        raw = self.token(unproven=True)
+        payload = signing.loads(raw, salt=SALT)
+        self.assertEqual(payload["plan"]["status"], Status.FEASIBLE_NOT_PROVEN.value)
+        before = self.counts()
+        # The real limited solver's plan still needs the administrator's extra consent.
+        self.assertEqual(self.post(raw).status_code, 400)
+        original_status = payload["plan"]["status"]
+        payload["plan"]["status"] = Status.OPTIMAL.value
+        self.assertNotEqual(payload["plan"]["status"], original_status)
+        # Preserve both the original timestamp and HMAC; only the signed content changes.
+        changed_content = sign_snapshot(payload).split(":", 1)[0]
+        bad = changed_content + ":" + raw.split(":", 1)[1]
+        with self.assertRaises(signing.BadSignature):
+            signing.loads(bad, salt=SALT)
+        for consent in ({}, {"accept_unproven": "on"}):
+            self.assertEqual(self.post(bad, **consent).status_code, 400)
+            self.assertEqual(self.counts(), before)
+        self.assertEqual(self.post(raw).status_code, 400)
+        self.assertEqual(self.counts(), before)
 
     def test_even_signed_plan_is_revalidated_for_qualification_and_exact_metrics(self):
         raw=self.token()
@@ -342,7 +363,7 @@ class OptimizationCommitTests(TestCase):
         self.assertIn("Traceback","\n".join(logs.output))
         self.assertEqual(self.counts(),before)
 
-    def test_identical_posts_and_lost_response_return_same_ids(self):
+    def test_identical_posts_return_same_ids(self):
         raw=self.token();first=self.post(raw);record=OptimizationCommit.objects.get();ids=record.created_ids
         after=self.counts()
         for _ in range(3):
@@ -403,6 +424,63 @@ class OptimizationConcurrencyTests(TransactionTestCase):
         self.workers=(User.objects.create_user("parallel-a"),User.objects.create_user("parallel-b"))
         self.contacts=[Client.objects.create(full_name="Вымышленный клиент параллельности")]
         self.raw=prepared(self.admin,self.workers,self.contacts)
+
+    def test_response_failure_after_commit_replays_complete_package_without_duplicates(self):
+        self.client.force_login(self.admin)
+        payload = decode_snapshot(self.raw, self.admin, stage="prepared")
+        data = {"snapshot": self.raw, "confirm_create": "on"}
+        url = reverse("optimization_confirm")
+        before = (ClientRequest.objects.count(), Task.objects.count())
+        committed_ids = []
+
+        def lose_response(name, *, token):
+            self.assertEqual(name, "optimization_result")
+            self.assertFalse(connection.in_atomic_block)
+            record = OptimizationCommit.objects.get(pk=token)
+            committed_ids.extend(record.created_ids)
+            raise RuntimeError("synthetic response failure AFTER COMMIT /internal/path")
+
+        with patch("crm.views.redirect", side_effect=lose_response) as redirect, self.assertLogs("crm.views", level="ERROR") as logs:
+            response = self.client.post(url, data)
+        redirect.assert_called_once()
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(OptimizationCommit.objects.count(), 1)
+        record = OptimizationCommit.objects.get()
+        self.assertEqual(str(record.token), payload["token"])
+        self.assertEqual(record.created_by_id, self.admin.pk)
+        self.assertEqual(len(committed_ids), 2)
+        self.assertEqual(record.created_ids, committed_ids)
+        after = (ClientRequest.objects.count(), Task.objects.count())
+        self.assertEqual(after, (before[0]+2, before[1]+2))
+        assignment = dict(payload["plan"]["assignment"])
+        details = {row["local_id"]: row for row in payload["details"]["rows"]}
+        for row in committed_ids:
+            request = ClientRequest.objects.get(pk=row["request_id"])
+            task = Task.objects.get(pk=row["task_id"])
+            self.assertEqual(request.client_id, details[row["local_id"]]["client"])
+            self.assertEqual(request.assigned_to_id, assignment[row["local_id"]])
+            self.assertEqual(task.assigned_to_id, request.assigned_to_id)
+            self.assertEqual(task.request_id, request.pk)
+            self.assertEqual((request.status, task.status), ("new", "new"))
+            self.assertEqual(request.due_at.isoformat(), payload["details"]["due_at"])
+            self.assertEqual(task.due_at, request.due_at)
+            self.assertEqual(request.tasks.count(), 1)
+            self.assertTrue(task.is_automatic)
+        self.assertContains(response, "Пакет мог быть создан", status_code=503)
+        self.assertNotContains(response, "Пакет не подтверждён", status_code=503)
+        self.assertNotContains(response, "Данные не созданы", status_code=503)
+        self.assertNotContains(response, "/internal/path", status_code=503)
+        self.assertNotContains(response, "Traceback", status_code=503)
+        self.assertContains(response, "Повторить это же подтверждение", status_code=503)
+        self.assertEqual(response.context["retry_form"]["snapshot"].value(), self.raw)
+        self.assertIn("AFTER COMMIT", "\n".join(logs.output))
+        self.assertIn("Traceback", "\n".join(logs.output))
+        replay = self.client.post(url, {"snapshot": response.context["retry_form"]["snapshot"].value(),
+                                      "confirm_create": "on"})
+        self.assertRedirects(replay, reverse("optimization_result", kwargs={"token": record.token}))
+        self.assertEqual((ClientRequest.objects.count(), Task.objects.count()), after)
+        self.assertEqual(OptimizationCommit.objects.count(), 1)
+        self.assertEqual(OptimizationCommit.objects.get().created_ids, committed_ids)
 
     def test_two_real_connections_start_confirmation_concurrently(self):
         barrier=threading.Barrier(2)

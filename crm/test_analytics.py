@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
+import sqlite3
 from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser, User
@@ -9,7 +11,7 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
-from .analytics import AnalyticsPeriod, build_report, closed_conversion, validate_amount
+from .analytics import AnalyticsPeriod, build_report, closed_conversion, validate_amount, won_amount
 from .forms import AnalyticsPeriodForm
 from .models import Client, ClientInteraction, ClientRequest, Deal, Task
 from .views import analytics
@@ -45,6 +47,18 @@ class AnalyticsTests(TestCase):
     def page(self, **params):
         with patch("crm.views.timezone.now", return_value=AT):
             return self.client.get(reverse("analytics"), params)
+
+    @contextmanager
+    def captured_money_errors(self):
+        logs = None
+        try:
+            with self.assertLogs('crm.analytics', level='ERROR') as logs:
+                yield logs
+        finally:
+            if logs is not None:
+                # exc_info retains the ORM converter/iterator. Keep formatted output,
+                # release raw traceback records while the test connection is still open.
+                logs.records.clear()
 
     def test_access_admin_manager_anonymous_inactive_and_read_only(self):
         for actor in (self.admin, self.manager):
@@ -139,7 +153,7 @@ class AnalyticsTests(TestCase):
 
     def test_sqlite_orm_overflow_withholds_money_and_does_not_500(self):
         self.deal('won','0.01');self.deal('won','10000000000.00')
-        with self.assertLogs('crm.analytics',level='ERROR') as logs:
+        with self.captured_money_errors() as logs:
             response=self.page()
         self.assertEqual(response.status_code,200)
         self.assertIsNone(response.context['report']['deals']['won_amount'])
@@ -155,18 +169,43 @@ class AnalyticsTests(TestCase):
         for raw in ('not-money','NaN','0.001'):
             with connection.cursor() as cursor:
                 cursor.execute('UPDATE crm_deal SET amount=%s WHERE id=%s',[raw,bad.pk])
-            with self.assertLogs('crm.analytics',level='ERROR'):
+            with self.captured_money_errors() as logs:
                 response=self.page()
             self.assertEqual(response.status_code,200)
             self.assertIsNone(response.context['report']['deals']['won_amount'])
+            expected = 'ValueError' if raw == '0.001' else 'TypeError'
+            self.assertTrue(any(expected in message for message in logs.output))
 
     def test_invalid_foreign_or_nonwon_money_is_not_read_for_manager(self):
         self.deal('won','10000000000.00',owner=self.other)
         self.deal('lost','10000000000.00')
         self.deal('won','0.10')
         self.assertEqual(self.report()['deals']['won_amount'],Decimal('0.10'))
-        with self.assertLogs('crm.analytics',level='ERROR'):
+        with self.captured_money_errors() as logs:
             self.assertIsNone(self.report(self.admin)['deals']['won_amount'])
+        self.assertTrue(any('InvalidOperation' in message for message in logs.output))
+
+    def test_captured_money_tracebacks_release_cursor_before_teardown(self):
+        self.deal('won', '10000000000.00')
+        cursors = []
+        create_cursor = connection.create_cursor
+
+        def track_cursor(name=None):
+            cursor = create_cursor(name)
+            cursors.append(cursor)
+            return cursor
+
+        with patch.object(connection, 'create_cursor', side_effect=track_cursor):
+            with self.captured_money_errors() as logs:
+                self.assertIsNone(won_amount(Deal.objects.visible_to(self.manager)))
+                self.assertEqual(len(cursors), 1)
+                self.assertTrue(logs.records[0].exc_info)
+                # The raw LogRecord really holds this live SQLite cursor through traceback.
+                cursors[0].execute('SELECT 1')
+        self.assertTrue(any('InvalidOperation' in message for message in logs.output))
+        with self.assertRaisesMessage(sqlite3.ProgrammingError, 'closed cursor'):
+            cursors[0].execute('SELECT 1')
+        self.assertEqual(logs.records, [])
 
     def test_amount_validator_checks_range_scale_type_and_finiteness(self):
         for amount in (Decimal('0'),Decimal('-1'),Decimal('0.001'),Decimal('1.001'),Decimal('10000000000.00'),Decimal('NaN'),Decimal('Infinity'),0.1,'1.00'):

@@ -694,12 +694,18 @@ def optimization_confirm(request):
             return _optimization_error(request, CommitError("Подтвердите пакет и необходимые согласия. Данные не созданы.", 400, retry=True), form)
         record = commit_snapshot(form.cleaned_data["snapshot"], request.user,
                                  accept_unproven=form.cleaned_data.get("accept_unproven", False))
-        return redirect("optimization_result", token=record.token)
     except CommitError as error:
         return _optimization_error(request, error, form)
     except Exception:
-        logger.exception("Не удалось атомарно создать пакет оптимизации")
-        return _optimization_error(request, CommitError("Пакет не подтверждён. Повторите это же подтверждение; токен защищает от дублей.", 503, retry=True), form)
+        logger.exception("Технический сбой при подтверждении пакета оптимизации")
+    else:
+        try:
+            return redirect("optimization_result", token=record.token)
+        except Exception:
+            logger.exception("Не удалось сформировать ответ после подтверждения пакета оптимизации")
+    return _optimization_error(request, CommitError(
+        "Не удалось подтвердить получение результата операции. Пакет мог быть создан. "
+        "Повторите это же подтверждение для проверки результата.", 503, retry=True), form)
 
 
 @never_cache
