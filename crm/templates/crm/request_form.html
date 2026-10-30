@@ -1,17 +1,13 @@
 {% extends "crm/base.html" %}
 {% block title %}{% if object %}Редактирование заявки{% else %}Новая заявка{% endif %}{% endblock %}
+{% block card_class %}form-panel{% endblock %}
 {% block content %}
 <h1>{% if object %}Редактирование заявки{% else %}Новая заявка{% endif %}</h1>
-{% if not user.is_superuser %}<p>Ответственным будете вы. Переназначить заявку может только администратор.</p>{% endif %}
-{% if object and user.is_superuser %}<p class="notice" role="note">При смене ответственного существующие задачи требуют ручного переназначения. Откройте каждую задачу и назначьте нового ответственного.</p>{% endif %}
-<form method="post">
-    {% csrf_token %}
-    {% if form.errors %}<p class="error" role="alert">Проверьте отмеченные поля. Данные не сохранены.</p>{% endif %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-        {{ field.label_tag }}{{ field }}{{ field.errors }}
-        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-    {% endfor %}
-    <div class="actions"><button type="submit">Сохранить</button><a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'request_list' %}{% endif %}">Отмена</a></div>
+<p class="form-intro">{% if object %}Измените сведения и текущее состояние заявки.{% else %}Новая заявка создаётся в статусе «Новая» вместе с автоматической задачей.{% endif %}</p>
+{% if not user.is_superuser %}<p class="message message-info">Ответственным будете вы. Переназначить заявку может только администратор.</p>{% endif %}
+{% if object and user.is_superuser %}<p class="message message-warning" role="note">При смене ответственного существующие задачи требуют ручного переназначения. Откройте каждую задачу и назначьте нового ответственного.</p>{% endif %}
+<form method="post" class="form-layout">
+    {% include "crm/_form_fields.html" %}
+    <div class="actions form-actions"><button type="submit">Сохранить</button><a class="button button-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'request_list' %}{% endif %}">Отмена</a></div>
 </form>
 {% endblock %}

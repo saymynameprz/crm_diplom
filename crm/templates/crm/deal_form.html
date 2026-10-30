@@ -1,14 +1,12 @@
 {% extends "crm/base.html" %}
 {% block title %}{% if object %}Редактирование сделки{% else %}Новая сделка{% endif %}{% endblock %}
+{% block card_class %}form-panel{% endblock %}
 {% block content %}
 <h1>{% if object %}Редактирование сделки{% else %}Новая сделка{% endif %}</h1>
-<p>Сумма указывается в рублях, не более двух знаков после запятой.</p>
-{% if not user.is_superuser %}<p>Ответственным будете вы. Переназначить сделку может только администратор.</p>{% endif %}
-<form method="post">
-{% csrf_token %}
-{% if form.errors %}<p class="error" role="alert">Проверьте отмеченные поля. Данные не сохранены.</p>{% endif %}
-{{ form.non_field_errors }}
-{% for field in form %}{{ field.label_tag }}{{ field }}{{ field.errors }}{% endfor %}
-<div class="actions"><button type="submit">Сохранить</button><a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'deal_list' %}{% endif %}">Отмена</a></div>
+<p class="form-intro">Сумма указывается в рублях, не более двух знаков после запятой.</p>
+{% if not user.is_superuser %}<p class="message message-info">Ответственным будете вы. Переназначить сделку может только администратор.</p>{% endif %}
+<form method="post" class="form-layout">
+    {% include "crm/_form_fields.html" %}
+    <div class="actions form-actions"><button type="submit">Сохранить</button><a class="button button-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'deal_list' %}{% endif %}">Отмена</a></div>
 </form>
 {% endblock %}

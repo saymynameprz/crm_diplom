@@ -1,11 +1,12 @@
 {% extends "crm/base.html" %}
 {% block title %}Удаление заявки{% endblock %}
+{% block card_class %}form-panel delete-panel{% endblock %}
 {% block content %}
 <h1>Удаление заявки</h1>
-<p>Удалить заявку «{{ client_request.title }}»? Это действие нельзя отменить.</p>
-<form method="post">
+<p class="message message-warning">Удалить заявку «{{ client_request.title }}»? Это действие нельзя отменить.</p>
+<form method="post" class="form-layout">
     {% csrf_token %}
     {% if form.errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-    <div class="actions"><button type="submit" class="danger">Удалить</button><a href="{{ client_request.get_absolute_url }}">Отмена</a></div>
+    <div class="actions form-actions"><button type="submit" class="danger">Удалить</button><a class="button button-secondary" href="{{ client_request.get_absolute_url }}">Отмена</a></div>
 </form>
 {% endblock %}

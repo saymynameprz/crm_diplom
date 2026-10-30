@@ -221,3 +221,40 @@ button:active, .button:active { background: var(--color-accent-active); color: v
 @media (prefers-reduced-motion: reduce) {
     .kanban-deal { transition: none; }
 }
+
+/* CRUD forms: shared fields and actions, independent of list/optimizer layouts. */
+.form-panel { max-width: 48rem; margin-left: 0; }
+.form-intro, .form-help { color: var(--color-text-muted); }
+.form-intro { margin: 0 0 var(--space-5); }
+.form-layout { display: grid; gap: var(--space-5); margin-top: var(--space-5); }
+.form-help { margin: 0; font-size: var(--font-size-small); }
+.form-field { display: grid; gap: var(--space-2); min-width: 0; }
+.field-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); flex-wrap: wrap; }
+.field-heading label { margin: 0; overflow-wrap: anywhere; }
+.field-requirement, .form-field .helptext { color: var(--color-text-muted); font-size: var(--font-size-small); overflow-wrap: anywhere; }
+.form-field input:not([type=hidden]), .form-field select, .form-field textarea { border-radius: var(--radius-sm); }
+.form-field input:hover:not(:disabled), .form-field select:hover:not(:disabled), .form-field textarea:hover:not(:disabled) { border-color: var(--color-focus); }
+.form-field [aria-invalid=true] { border-color: var(--color-error-text); }
+.form-field .errorlist { margin: 0; font-size: var(--font-size-small); overflow-wrap: anywhere; }
+.form-error-summary { min-width: 0; }
+.form-error-summary p { margin: 0; font-weight: 600; }
+.form-error-summary ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
+.form-actions { margin-top: 0; gap: var(--space-3); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+.form-actions button, .form-actions .button { display: inline-flex; align-items: center; justify-content: center; max-width: 100%; padding: var(--space-3) var(--space-5); border: 1px solid transparent; border-radius: var(--radius-md); font-weight: 600; text-align: center; overflow-wrap: anywhere; }
+.button-secondary { background: var(--color-surface-raised); color: var(--color-text); border: 1px solid var(--color-control-border); }
+.form-actions .button-secondary { border-color: var(--color-control-border); }
+.button-secondary:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.button-secondary:active { background: var(--color-bg); color: var(--color-text); }
+button:disabled { background: var(--color-surface-raised); color: var(--color-text-muted); border: 1px solid var(--color-control-border); cursor: not-allowed; opacity: 1; }
+.form-field input:disabled, .form-field select:disabled, .form-field textarea:disabled { background: var(--color-surface-raised); cursor: not-allowed; }
+.message { padding: var(--space-4); border: 1px solid currentColor; border-radius: var(--radius-md); overflow-wrap: anywhere; }
+.message-info { background: var(--color-info-bg); color: var(--color-info-text); }
+.message-warning { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.message-success { background: var(--color-success-bg); color: var(--color-success-text); }
+.message-error { background: var(--color-error-bg); color: var(--color-error-text); }
+.message a { color: inherit; }
+.delete-panel .message { margin-bottom: 0; }
+@media (max-width: 600px) {
+    .form-layout { gap: var(--space-4); }
+    .form-actions { padding-top: var(--space-4); }
+}

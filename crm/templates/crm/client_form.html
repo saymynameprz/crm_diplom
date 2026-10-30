@@ -1,20 +1,13 @@
 {% extends "crm/base.html" %}
 {% block title %}{% if object %}Редактирование{% else %}Добавление клиента{% endif %}{% endblock %}
+{% block card_class %}form-panel{% endblock %}
 {% block content %}
 <h1>{% if object %}Редактирование клиента{% else %}Добавление клиента{% endif %}</h1>
-<p>Обязательное поле — имя клиента. Остальные поля можно оставить пустыми.</p>
-<form method="post">
-    {% csrf_token %}
-    {% if form.errors %}<p class="error" role="alert">Проверьте отмеченные поля. Данные не сохранены.</p>{% endif %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-        {{ field.label_tag }}
-        {{ field }}
-        {{ field.errors }}
-        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-    {% endfor %}
-    <div class="actions"><button type="submit">Сохранить</button>
-        <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'client_list' %}{% endif %}">Отмена</a>
+<p class="form-intro">Сохраните имя и контактные данные клиента.</p>
+<form method="post" class="form-layout">
+    {% include "crm/_form_fields.html" %}
+    <div class="actions form-actions"><button type="submit">Сохранить</button>
+        <a class="button button-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'client_list' %}{% endif %}">Отмена</a>
     </div>
 </form>
 {% endblock %}

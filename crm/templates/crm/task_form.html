@@ -1,16 +1,12 @@
 {% extends "crm/base.html" %}
 {% block title %}{% if object %}Редактирование задачи{% else %}Новая задача{% endif %}{% endblock %}
+{% block card_class %}form-panel{% endblock %}
 {% block content %}
 <h1>{% if object %}Редактирование задачи{% else %}Новая задача{% endif %}</h1>
-{% if user.is_superuser %}<p>Ответственный задачи должен совпадать с активным ответственным заявки. При необходимости сначала измените заявку.</p>{% else %}<p>Вы можете выбрать только свою заявку. Ответственным задачи будете вы.</p>{% endif %}
-<form method="post">
-    {% csrf_token %}
-    {% if form.errors %}<p class="error" role="alert">Проверьте отмеченные поля. Данные не сохранены.</p>{% endif %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-        {{ field.label_tag }}{{ field }}{{ field.errors }}
-        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-    {% endfor %}
-    <div class="actions"><button type="submit">Сохранить</button><a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'task_list' %}{% endif %}">Отмена</a></div>
+<p class="form-intro">Укажите заявку, название и срок выполнения задачи.</p>
+{% if user.is_superuser %}<p class="message message-info">Ответственный задачи должен совпадать с активным ответственным заявки. При необходимости сначала измените заявку.</p>{% else %}<p class="message message-info">Вы можете выбрать только свою заявку. Ответственным задачи будете вы.</p>{% endif %}
+<form method="post" class="form-layout">
+    {% include "crm/_form_fields.html" %}
+    <div class="actions form-actions"><button type="submit">Сохранить</button><a class="button button-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'task_list' %}{% endif %}">Отмена</a></div>
 </form>
 {% endblock %}

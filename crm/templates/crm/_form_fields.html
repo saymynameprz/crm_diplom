@@ -1,0 +1,22 @@
+{% csrf_token %}
+<p class="form-help">Поля с пометкой «Обязательно» нужно заполнить. Остальные можно оставить пустыми.</p>
+{% if form.errors %}
+<div class="error form-error-summary" role="alert">
+    <p>Проверьте отмеченные поля. Данные не сохранены.</p>
+    {{ form.non_field_errors }}
+    <ul>
+        {% for field in form %}{% if field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}</a></li>{% endif %}{% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% for field in form %}
+    <div class="form-field">
+        <div class="field-heading">
+            {{ field.label_tag }}
+            <span class="field-requirement">{% if field.field.required %}Обязательно{% else %}Необязательно{% endif %}</span>
+        </div>
+        {{ field }}
+        {% if field.help_text %}<div class="helptext" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+    </div>
+{% endfor %}

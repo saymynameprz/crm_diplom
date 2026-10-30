@@ -1,9 +1,15 @@
+from datetime import timedelta
+from decimal import Decimal
 from html.parser import HTMLParser
+from unittest.mock import patch
 
 from django.contrib.auth import SESSION_KEY
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
+
+from .models import Client as Contact, ClientInteraction, ClientRequest, Deal, Task
 
 
 class ProjectSmokeTest(TestCase):
@@ -369,3 +375,205 @@ class ApplicationShellTests(TestCase):
         self.assertContains(response, "&lt;script&gt;Учебное имя&lt;/script&gt;")
         self.assertContains(response, self.manager.last_name)
         self.assertNotContains(response, "<script>")
+
+
+class CrudFormPresentationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user("form-admin", is_superuser=True)
+        cls.manager = User.objects.create_user("form-manager")
+        cls.other = User.objects.create_user("form-other")
+        cls.contact = Contact.objects.create(full_name="Вымышленный клиент форм")
+        cls.request_record = ClientRequest.objects.create(client=cls.contact, title="Заявка форм", assigned_to=cls.manager)
+        cls.task = Task.objects.create(request=cls.request_record, title="Задача форм", assigned_to=cls.manager)
+        cls.deal = Deal.objects.create(client=cls.contact, title="Сделка форм", amount="12.34", assigned_to=cls.manager)
+        cls.interaction = ClientInteraction.objects.create(client=cls.contact, subject="Событие форм", created_by=cls.manager,
+            interaction_type="call", occurred_at=timezone.now() - timedelta(days=1))
+
+    def cases(self):
+        retained = "Сохранённый текст <проверка>"
+        return [
+            ("client", self.contact, {"full_name": "Учебный клиент", "notes": retained}, {"email": "bad"}, "Клиент создан."),
+            ("request", self.request_record, {"client": self.contact.pk, "title": "Учебная заявка", "description": retained,
+                "due_at": "2028-01-15T12:34"}, {"title": "", "due_at": "bad"}, "Заявка создана."),
+            ("task", self.task, {"request": self.request_record.pk, "title": "Учебная задача", "status": "new",
+                "description": retained, "due_at": "2028-01-15T12:34"}, {"title": "", "due_at": "bad"}, "Задача создана."),
+            ("deal", self.deal, {"client": self.contact.pk, "title": "Учебная сделка", "amount": "1234.56",
+                "description": retained, "expected_close_date": "2028-01-16"}, {"amount": "1.234"}, "Сделка создана."),
+            ("interaction", self.interaction, {"client": self.contact.pk, "subject": "Учебное событие", "interaction_type": "comment",
+                "description": retained, "occurred_at": "2020-01-15T12:34"}, {"occurred_at": "2099-01-15T12:34"}, "Взаимодействие добавлено."),
+        ]
+
+    def state(self):
+        return {model.__name__: list(model.objects.order_by("pk").values())
+            for model in (Contact, ClientRequest, Task, Deal, ClientInteraction)}
+
+    def assert_semantics(self, response):
+        self.assertEqual(response.status_code, 200)
+        markup = ShellMarkup(response.content.decode())
+        self.assertEqual(markup.errors, [])
+        self.assertEqual(len(markup.ids), len(set(markup.ids)))
+        for tag in ("h1", "main"):
+            self.assertEqual(sum(t == tag for t, _ in markup.elements), 1)
+        self.assertContains(response, 'class="topbar"')
+        ids = {attrs["id"]: attrs for _, attrs in markup.elements if "id" in attrs}
+        labels = [attrs["for"] for tag, attrs in markup.elements if tag == "label"]
+        for target in labels:
+            self.assertIn(target, ids)
+        for _, attrs in markup.elements:
+            for target in attrs.get("aria-describedby", "").split():
+                self.assertIn(target, ids)
+        for field in response.context["form"]:
+            self.assertEqual(labels.count(field.id_for_label), 1)
+            control = ids[field.auto_id]
+            control_tag = next(tag for tag, attrs in markup.elements if attrs.get("id") == field.auto_id)
+            if not field.field.required:
+                self.assertNotIn("required", control)
+            elif control_tag != "select":
+                self.assertIn("required", control)
+            if field.errors:
+                self.assertEqual(control.get("aria-invalid"), "true")
+                self.assertIn(field.auto_id + "_error", control["aria-describedby"].split())
+                self.assertContains(response, f'href="#{field.id_for_label}"')
+        return markup
+
+    def test_create_and_edit_have_labels_required_help_ids_and_shell_for_both_roles(self):
+        for actor in (self.admin, self.manager):
+            self.client.force_login(actor)
+            for name, record, *_ in self.cases():
+                for action in ("create", "update"):
+                    with self.subTest(actor=actor.username, name=name, action=action):
+                        url = reverse(name + "_" + action, kwargs={"pk": record.pk} if action == "update" else {})
+                        response = self.client.get(url)
+                        markup = self.assert_semantics(response)
+                        self.assertContains(response, "Поля с пометкой «Обязательно»")
+                        required = sum(field.field.required for field in response.context["form"])
+                        self.assertContains(response, '>Обязательно</span>', count=required)
+                        if name in ("request", "task"):
+                            self.assertContains(response, 'id="id_due_at_helptext"', count=1)
+                            self.assertContains(response, "Дата и время UTC. Прошедший срок допускается.")
+                        controls = [a for tag, a in markup.elements if tag in ("input", "select", "textarea")]
+                        if name in ("request", "task", "deal"):
+                            self.assertEqual(any(a.get("name") == "assigned_to" for a in controls), actor.is_superuser)
+
+    def test_invalid_create_and_edit_preserve_values_errors_and_all_records(self):
+        for actor in (self.admin, self.manager):
+            self.client.force_login(actor)
+            for name, record, data, invalid, _ in self.cases():
+                for action in ("create", "update"):
+                    with self.subTest(actor=actor.username, name=name, action=action):
+                        before = self.state()
+                        url = reverse(name + "_" + action, kwargs={"pk": record.pk} if action == "update" else {})
+                        posted = {**data, "assigned_to": self.manager.pk, **invalid}
+                        if action == "update" and name == "request":
+                            posted["status"] = "new"
+                        if action == "update" and name == "deal":
+                            posted["stage"] = "new"
+                        response = self.client.post(url, posted)
+                        self.assert_semantics(response)
+                        self.assertEqual(set(response.context["form"].errors), set(invalid))
+                        for field, value in posted.items():
+                            if field in response.context["form"].fields:
+                                self.assertEqual(str(response.context["form"][field].value()), str(value))
+                        self.assertContains(response, "Сохранённый текст &lt;проверка&gt;")
+                        self.assertContains(response, 'role="alert"')
+                        self.assertEqual(self.state(), before)
+
+    def test_corrected_posts_save_exact_values_and_keep_success_messages(self):
+        self.client.force_login(self.manager)
+        for name, record, data, invalid, success in self.cases():
+            with self.subTest(name=name):
+                url = reverse(name + "_create")
+                self.assert_semantics(self.client.post(url, {**data, **invalid}))
+                response = self.client.post(url, data, follow=True)
+                self.assertContains(response, success)
+                self.assertContains(response, 'aria-live="polite"')
+                created = type(record).objects.latest("pk")
+                edit = self.client.get(reverse(name + "_update", kwargs={"pk": created.pk}))
+                self.assert_semantics(edit)
+                if name in ("request", "task"):
+                    self.assertEqual(created.due_at.isoformat(), "2028-01-15T12:34:00+00:00")
+                    self.assertContains(edit, 'value="2028-01-15T12:34"')
+                if name == "request":
+                    self.assertEqual(created.status, "new")
+                    self.assertEqual(created.tasks.count(), 1)
+                if name == "deal":
+                    self.assertEqual(created.amount, Decimal("1234.56"))
+                    self.assertEqual(created.stage, "new")
+                if name == "interaction":
+                    self.assertEqual(created.occurred_at.isoformat(), "2020-01-15T12:34:00+00:00")
+
+    def test_automatic_task_disabled_link_and_manager_request_scope(self):
+        self.task.is_automatic = True
+        self.task.save()
+        foreign = ClientRequest.objects.create(client=self.contact, title="Чужая заявка", assigned_to=self.other)
+        self.client.force_login(self.manager)
+        markup = self.assert_semantics(self.client.get(reverse("task_update", kwargs={"pk": self.task.pk})))
+        request = next(a for tag, a in markup.elements if a.get("id") == "id_request")
+        self.assertIn("disabled", request)
+        response = self.client.post(reverse("task_create"), {"request": foreign.pk, "title": "Недоступная", "status": "new"})
+        self.assert_semantics(response)
+        self.assertEqual(set(response.context["form"].errors), {"request"})
+        self.assertNotIn(foreign, response.context["form"].fields["request"].queryset)
+
+    def test_cancel_links_leave_create_edit_and_delete_without_writes(self):
+        self.client.force_login(self.admin)
+        before = self.state()
+        for name, record, *_ in self.cases():
+            for action in ("create", "update", "delete"):
+                with self.subTest(name=name, action=action):
+                    url = reverse(name + "_" + action, kwargs={"pk": record.pk} if action != "create" else {})
+                    markup = ShellMarkup(self.client.get(url).content.decode())
+                    cancel = next(a for tag, a in markup.elements if tag == "a" and "button-secondary" in a.get("class", "").split())
+                    self.assertEqual(cancel["href"], reverse(name + "_list") if action == "create" else record.get_absolute_url())
+                    self.assertEqual(self.client.get(cancel["href"]).status_code, 200)
+                    self.assertEqual(self.state(), before)
+
+    def test_all_delete_confirmations_keep_post_csrf_and_manager_forbidden(self):
+        removable = Contact.objects.create(full_name="Без связей")
+        unlinked = ClientRequest.objects.create(client=self.contact, title="Без задач", assigned_to=self.manager)
+        records = [("client", removable), ("request", unlinked), ("task", self.task), ("deal", self.deal), ("interaction", self.interaction)]
+        secured = Client(enforce_csrf_checks=True)
+        for name, record in records:
+            with self.subTest(name=name):
+                url = reverse(name + "_delete", kwargs={"pk": record.pk})
+                secured.force_login(self.manager)
+                self.assertEqual(secured.get(url).status_code, 403)
+                secured.force_login(self.admin)
+                response = secured.get(url)
+                self.assert_semantics(response)
+                self.assertContains(response, "Это действие нельзя отменить.")
+                self.assertTrue(type(record).objects.filter(pk=record.pk).exists())
+                self.assertEqual(secured.post(url).status_code, 403)
+                token = secured.cookies["csrftoken"].value
+                response = secured.post(url, {"csrfmiddlewaretoken": token}, follow=True)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'class="notice"')
+                self.assertFalse(type(record).objects.filter(pk=record.pk).exists())
+
+    def test_protect_errors_keep_explanation_object_and_cancel(self):
+        self.client.force_login(self.admin)
+        before = self.state()
+        for name, record, reason in (("client", self.contact, "связанные заявки, сделки или история взаимодействий"),
+                                     ("request", self.request_record, "связанные задачи")):
+            with self.subTest(name=name):
+                response = self.client.post(reverse(name + "_delete", kwargs={"pk": record.pk}))
+                self.assert_semantics(response)
+                self.assertContains(response, reason)
+                self.assertContains(response, "Данные сохранены.")
+                self.assertContains(response, 'role="alert"')
+                self.assertContains(response, f'href="{record.get_absolute_url()}"')
+                self.assertEqual(self.state(), before)
+
+    def test_non_field_error_is_announced_without_losing_form_data(self):
+        from .services import AutomationError
+        self.client.force_login(self.manager)
+        data = self.cases()[1][2]
+        before = self.state()
+        with patch("crm.views.create_request_with_task", side_effect=AutomationError), patch("crm.views.logger.exception"):
+            response = self.client.post(reverse("request_create"), data)
+        self.assert_semantics(response)
+        self.assertTrue(response.context["form"].non_field_errors())
+        self.assertContains(response, "Данные не сохранены.")
+        self.assertContains(response, "Сохранённый текст &lt;проверка&gt;")
+        self.assertEqual(self.state(), before)

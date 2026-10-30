@@ -1,10 +1,11 @@
 {% extends "crm/base.html" %}
 {% block title %}Удаление задачи{% endblock %}
+{% block card_class %}form-panel delete-panel{% endblock %}
 {% block content %}
 <h1>Удаление задачи</h1>
-<p>Удалить задачу «{{ task.title }}»? Это действие нельзя отменить.</p>
-<form method="post">
+<p class="message message-warning">Удалить задачу «{{ task.title }}»? Это действие нельзя отменить.</p>
+<form method="post" class="form-layout">
     {% csrf_token %}
-    <div class="actions"><button type="submit" class="danger">Удалить</button><a href="{{ task.get_absolute_url }}">Отмена</a></div>
+    <div class="actions form-actions"><button type="submit" class="danger">Удалить</button><a class="button button-secondary" href="{{ task.get_absolute_url }}">Отмена</a></div>
 </form>
 {% endblock %}
