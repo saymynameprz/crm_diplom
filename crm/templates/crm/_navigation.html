@@ -1,0 +1,17 @@
+<nav class="navigation" aria-label="Основная навигация">
+    <a href="{% url 'home' %}"{% if current == 'home' %} aria-current="page"{% endif %}>Главная</a>
+    <span class="navigation-group">Работа с клиентами</span>
+    <a href="{% url 'client_list' %}"{% if current|slice:':7' == 'client_' %} aria-current="{% if current == 'client_list' %}page{% else %}location{% endif %}"{% endif %}>Клиенты</a>
+    <a href="{% url 'request_list' %}"{% if current|slice:':8' == 'request_' %} aria-current="{% if current == 'request_list' %}page{% else %}location{% endif %}"{% endif %}>Заявки</a>
+    <a href="{% url 'task_list' %}"{% if current|slice:':5' == 'task_' %} aria-current="{% if current == 'task_list' %}page{% else %}location{% endif %}"{% endif %}>Задачи</a>
+    <span class="navigation-group">Сделки</span>
+    <a href="{% url 'deal_list' %}"{% if current|slice:':5' == 'deal_' and current != 'deal_kanban' and current != 'deal_change_stage' %} aria-current="{% if current == 'deal_list' %}page{% else %}location{% endif %}"{% endif %}>Сделки</a>
+    <a href="{% url 'deal_kanban' %}"{% if current == 'deal_kanban' or current == 'deal_change_stage' %} aria-current="{% if current == 'deal_kanban' %}page{% else %}location{% endif %}"{% endif %}>Kanban</a>
+    <span class="navigation-group">Обзор работы</span>
+    <a href="{% url 'interaction_list' %}"{% if current|slice:':12' == 'interaction_' %} aria-current="{% if current == 'interaction_list' %}page{% else %}location{% endif %}"{% endif %}>История взаимодействий</a>
+    <a href="{% url 'analytics' %}"{% if current == 'analytics' %} aria-current="page"{% endif %}>Аналитика</a>
+    {% if user.is_active and user.is_superuser %}
+    <span class="navigation-group">Планирование</span>
+    <a href="{% url 'optimization' %}"{% if current|slice:':12' == 'optimization' %} aria-current="{% if current == 'optimization' %}page{% else %}location{% endif %}"{% endif %}>Оптимизация заявок</a>
+    {% endif %}
+</nav>

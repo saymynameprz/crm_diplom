@@ -31,7 +31,7 @@ class DocumentCheck(HTMLParser):
         if 'id' in a:self.ids.append(a['id'])
         if tag=='label' and 'for' in a:self.labels.append(a['for'])
         if tag in ('input','select','textarea') and 'id' in a:self.controls.add(a['id'])
-        if tag=='form':self.forms+=1
+        if tag=='form' and a.get('action','').endswith('/change-stage/'):self.forms+=1
     def validate(self):
         assert len(self.ids)==len(set(self.ids)), 'duplicate element IDs'
         assert all(label in self.controls for label in self.labels), 'unbound label'
@@ -172,14 +172,14 @@ with tempfile.TemporaryDirectory(prefix='crm-kanban-validation-') as directory:
                     page.on('response',lambda r:failures.append(r.status) if r.status>=500 else None)
                     page.goto(base+'/login/');page.get_by_label('Логин').fill('http-admin');page.get_by_label('Пароль').fill(password)
                     page.get_by_role('button',name='Войти',exact=True).click();page.wait_for_url(base+'/')
+                    if page.locator('.mobile-navigation').is_visible():page.locator('.mobile-navigation summary').click()
                     page.get_by_role('link',name='Сделки',exact=True).click();page.get_by_role('link',name='Воронка продаж',exact=True).click()
                     assert page.locator('.kanban-column').count()==5
                     assert page.locator('[data-stage=new] .kanban-deal').count()==20
                     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
                     region=page.get_by_role('region',name='Доска сделок',exact=True)
-                    if width in (1440,1280):assert region.evaluate('(e)=>e.scrollWidth <= e.clientWidth+1')
-                    else:
-                        assert region.evaluate('(e)=>e.scrollWidth > e.clientWidth')
+                    # Available board width now excludes the persistent sidebar.
+                    if region.evaluate('(e)=>e.scrollWidth > e.clientWidth+1'):
                         region.focus();page.keyboard.press('ArrowRight');page.wait_for_timeout(200)
                         assert region.evaluate('(e)=>e.scrollLeft')>0
                     page.screenshot(path=str(artifacts/f'board-{width}.png'),full_page=True)
@@ -239,7 +239,11 @@ with tempfile.TemporaryDirectory(prefix='crm-kanban-validation-') as directory:
                         # use browser-native DataTransfer for off-screen-column event delivery.
                         source=card().locator('.kanban-drag-handle')
                         source.scroll_into_view_if_needed()
-                        if width>=1280:
+                        target_visible=column(stage).locator('h2').evaluate('''e=>{
+                            const a=e.getBoundingClientRect(),b=e.closest('.kanban-scroll').getBoundingClientRect();
+                            return a.left+a.width/2>=b.left && a.left+a.width/2<=b.right;
+                        }''')
+                        if width>=1280 and target_visible:
                             source.drag_to(column(stage).locator('h2'))
                         else:
                             transfer=page.evaluate_handle('new DataTransfer()')

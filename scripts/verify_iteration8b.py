@@ -200,6 +200,7 @@ def main():
                     for width in [1440,1280,768,375]:
                         context=browser.new_context(viewport={'width':width,'height':1000},java_script_enabled=False,locale='ru-RU')
                         page=context.new_page();watch(page);login(page)
+                        if page.locator('.mobile-navigation').is_visible():page.locator('.mobile-navigation summary').click()
                         page.get_by_role('link',name='Аналитика',exact=True).click();verify(page.content(),'manager')
                         page.get_by_label(re.compile('^Период:?$')).select_option('custom')
                         page.get_by_label(re.compile('^Начальная дата UTC:?$')).fill(dates['start_date'])

@@ -8,24 +8,46 @@
     <link rel="stylesheet" href="{% static 'crm/style.css' %}">
     {% block styles %}{% endblock %}
 </head>
-<body>
-    <header class="brand">Дипломная CRM</header>
-    {% if user.is_authenticated %}
-    <nav class="navigation" aria-label="Основная навигация">
-        <a href="{% url 'home' %}">Главная</a>
-        <a href="{% url 'client_list' %}">Клиенты</a>
-        <a href="{% url 'request_list' %}">Заявки</a>
-        <a href="{% url 'task_list' %}">Задачи</a>
-        <a href="{% url 'deal_list' %}">Сделки</a>
-        <a href="{% url 'interaction_list' %}">История</a>
-        <a href="{% url 'analytics' %}">Аналитика</a>
-        {% if user.is_active and user.is_superuser %}<a href="{% url 'optimization' %}">Оптимизация заявок</a>{% endif %}
-    </nav>
+{% with current=request.resolver_match.url_name %}
+<body class="{% if user.is_authenticated and current != 'login' %}application{% else %}auth-page{% endif %}">
+    {% if user.is_authenticated and current != 'login' %}
+    <a class="skip-link" href="#main-content">К содержимому</a>
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="Разделы CRM">
+            <a class="brand" href="{% url 'home' %}"><span class="brand-mark">CRM</span><span>Дипломная CRM</span></a>
+            {% include "crm/_navigation.html" %}
+        </aside>
+        <div class="app-workspace">
+            <header class="topbar">
+                <div class="page-context"><span class="context-label">Текущий раздел</span>
+                    <span class="context-name">{% if current == 'home' %}Главная{% elif current|slice:':7' == 'client_' %}Клиенты{% elif current|slice:':8' == 'request_' %}Заявки{% elif current|slice:':5' == 'task_' %}Задачи{% elif current == 'deal_kanban' or current == 'deal_change_stage' %}Kanban{% elif current|slice:':5' == 'deal_' %}Сделки{% elif current|slice:':12' == 'interaction_' %}История взаимодействий{% elif current == 'analytics' %}Аналитика{% elif current|slice:':12' == 'optimization' %}Оптимизация заявок{% else %}CRM{% endif %}</span>
+                </div>
+                <div class="account-controls">
+                    <div class="user-identity"><span class="user-name">{{ user.get_full_name|default:user.username }}</span><span class="user-role">{% if user.is_superuser %}Администратор{% else %}Менеджер{% endif %}</span></div>
+                    <form class="logout-form" method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Выйти</button></form>
+                </div>
+            </header>
+            <details class="mobile-navigation">
+                <summary>Разделы CRM</summary>
+                {% include "crm/_navigation.html" %}
+            </details>
+            <div class="app-content">
+    {% else %}
+    <div class="auth-shell">
+        <a class="brand" href="{% url 'home' %}"><span class="brand-mark">CRM</span><span>Дипломная CRM</span></a>
     {% endif %}
-    <main class="card {% block card_class %}{% endblock %}">
+    <main id="main-content" class="card {% block card_class %}{% endblock %}" tabindex="-1">
         {% if messages %}<div aria-live="polite">{% for message in messages %}<p class="notice">{{ message }}</p>{% endfor %}</div>{% endif %}
         {% block content %}{% endblock %}
     </main>
+    {% if user.is_authenticated and current != 'login' %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    </div>
+    {% endif %}
 {% block scripts %}{% endblock %}
 </body>
+{% endwith %}
 </html>
