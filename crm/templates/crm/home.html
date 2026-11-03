@@ -1,13 +1,52 @@
 {% extends "crm/base.html" %}
 {% block title %}Главная{% endblock %}
+{% block card_class %}dashboard-shell{% endblock %}
 {% block content %}
-<h1>Добро пожаловать</h1>
-<h2>Доступные записи</h2>
-<dl class="summary">
-    <dt><a href="{% url 'request_list' %}">Заявки</a></dt><dd id="request-count">{{ request_count }}</dd>
-    <dt><a href="{% url 'task_list' %}">Задачи</a></dt><dd id="task-count">{{ task_count }}</dd>
-    <dt><a href="{% url 'request_list' %}?overdue=yes">Просроченные заявки</a></dt><dd id="overdue-request-count">{{ overdue_request_count }}</dd>
-    <dt><a href="{% url 'task_list' %}?overdue=yes">Просроченные задачи</a></dt><dd id="overdue-task-count">{{ overdue_task_count }}</dd>
-</dl>
-{% if user.is_superuser %}<p><a href="{% url 'admin:index' %}">Управление пользователями</a></p>{% endif %}
+<header class="page-header"><div>
+    <h1>Главная панель</h1>
+    <p class="muted">{% if user.is_superuser %}Все доступные заявки и задачи{% else %}Ваши заявки и задачи{% endif %} · текущее рабочее состояние</p>
+</div></header>
+<section aria-labelledby="dashboard-overview">
+<h2 id="dashboard-overview" class="dashboard-section-title">Обзор работы</h2>
+<div class="metric-grid dashboard-kpis">
+    <a class="dashboard-metric" href="{% url 'request_list' %}" aria-labelledby="request-metric-title request-count">
+        <dl class="metric-card"><dt id="request-metric-title">Доступные заявки</dt><dd id="request-count">{{ request_count }}</dd><dd class="metric-note">Открыть заявки →</dd></dl>
+    </a>
+    <a class="dashboard-metric" href="{% url 'task_list' %}" aria-labelledby="task-metric-title task-count">
+        <dl class="metric-card"><dt id="task-metric-title">Доступные задачи</dt><dd id="task-count">{{ task_count }}</dd><dd class="metric-note">Открыть задачи →</dd></dl>
+    </a>
+    <a class="dashboard-metric" href="{% url 'request_list' %}?overdue=yes" aria-labelledby="overdue-request-title overdue-request-count">
+        <dl class="metric-card{% if overdue_request_count %} metric-attention{% endif %}"><dt id="overdue-request-title">Просроченные заявки</dt><dd id="overdue-request-count">{{ overdue_request_count }}</dd><dd class="metric-note">Проверить сроки →</dd></dl>
+    </a>
+    <a class="dashboard-metric" href="{% url 'task_list' %}?overdue=yes" aria-labelledby="overdue-task-title overdue-task-count">
+        <dl class="metric-card{% if overdue_task_count %} metric-attention{% endif %}"><dt id="overdue-task-title">Просроченные задачи</dt><dd id="overdue-task-count">{{ overdue_task_count }}</dd><dd class="metric-note">Проверить сроки →</dd></dl>
+    </a>
+</div>
+{% if not request_count and not task_count %}<p class="message message-info">Доступных заявок и задач пока нет. Откройте нужный раздел, чтобы начать работу.</p>{% endif %}
+</section>
+<div class="dashboard-panels">
+    <section class="dashboard-panel" aria-labelledby="dashboard-work-title">
+        <h2 id="dashboard-work-title">Работа с клиентами</h2>
+        <p class="muted">Основные разделы ежедневной работы</p>
+        <ul class="quick-links">
+            <li><a href="{% url 'client_list' %}"><strong>Клиенты</strong><span>Контакты и организации</span></a></li>
+            <li><a href="{% url 'request_list' %}"><strong>Заявки</strong><span>Регистрация и обработка</span></a></li>
+            <li><a href="{% url 'task_list' %}"><strong>Задачи</strong><span>Сроки и выполнение</span></a></li>
+            <li><a href="{% url 'deal_list' %}"><strong>Сделки</strong><span>Суммы и текущие этапы</span></a></li>
+        </ul>
+    </section>
+    <section class="dashboard-panel" aria-labelledby="dashboard-review-title">
+        <h2 id="dashboard-review-title">Обзор и планирование</h2>
+        <p class="muted">Отчёты, события и доступные инструменты</p>
+        <ul class="quick-links">
+            <li><a href="{% url 'analytics' %}"><strong>Аналитика CRM</strong><span>Показатели и распределения</span></a></li>
+            <li><a href="{% url 'deal_kanban' %}"><strong>Kanban</strong><span>Доска текущих этапов</span></a></li>
+            <li><a href="{% url 'interaction_list' %}"><strong>История взаимодействий</strong><span>Ручные записи событий</span></a></li>
+            {% if user.is_superuser and user.is_active %}
+            <li><a href="{% url 'optimization' %}"><strong>Оптимизация заявок</strong><span>Расчёт и подтверждение пакета</span></a></li>
+            <li><a href="{% url 'admin:index' %}"><strong>Управление пользователями</strong><span>Администрирование Django</span></a></li>
+            {% endif %}
+        </ul>
+    </section>
+</div>
 {% endblock %}

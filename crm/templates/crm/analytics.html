@@ -4,17 +4,20 @@
 {% block styles %}<link rel="stylesheet" href="{% static 'crm/analytics.css' %}">{% endblock %}
 {% block card_class %}analytics-shell{% endblock %}
 {% block content %}
-<header class="analytics-header">
+<header class="analytics-header page-header"><div>
 <h1>Аналитика CRM</h1>
-<p>Расчёт на {{ report.at|date:"d.m.Y H:i:s" }} UTC.</p>
+<p class="muted">Сделки и события за период · нагрузка на текущий момент</p>
+<p class="analytics-timestamp">Расчёт на {{ report.at|date:"d.m.Y H:i:s" }} UTC.</p>
+</div>
 </header>
-<form method="get" class="filters">
+<form method="get" class="filters analytics-period-form">
+    {% if form.errors %}<p class="error" role="alert">Проверьте период и отмеченные даты. Показатели за период не рассчитаны.</p>{% endif %}
     {{ form.non_field_errors }}
     <div class="analytics-filters">
-    {% for field in form %}<div>{{ field.label_tag }}{{ field }}{% if field.errors %}<div role="alert">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+    {% for field in form %}<div>{{ field.as_field_group }}</div>{% endfor %}
+    <div class="actions filter-actions"><button type="submit">Рассчитать</button><a href="{% url 'analytics' %}">Всё время</a></div>
     </div>
-    <p>Даты нужны для произвольного периода. Начальная дата включена с 00:00 UTC, конечная — до 00:00 следующего дня. Будущие даты запрещены; события позже момента расчёта не включаются.</p>
-    <div class="actions"><button type="submit">Рассчитать</button><a href="{% url 'analytics' %}">Всё время</a></div>
+    <p class="analytics-filter-help">Для произвольного периода заполните обе даты UTC. Границы и правила отбора — в методике ниже.</p>
 </form>
 {% if form.is_valid %}
 <p class="analytics-period">Выбранный период:
@@ -22,23 +25,18 @@
 {% endif %}
 <section aria-labelledby="period-metrics">
 <h2 id="period-metrics">Сделки и взаимодействия за период</h2>
-<p>Сделки отбираются по дате создания (created_at), взаимодействия — по времени события (occurred_at). Этапы сделок показывают их текущее состояние: историю смены этапов и дату закрытия система не хранит.</p>
+<p class="analytics-scope">Сделки — по created_at, события — по occurred_at. Этапы отражают текущее состояние сделок. Сумма успешных сделок не означает полученные платежи.</p>
 {% if report.deals is not None %}
-<div class="analytics-kpis">
-    <dl class="analytics-kpi"><dt>Всего сделок</dt><dd id="analytics-deal-total">{{ report.deals.total }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Открытые сделки</dt><dd id="analytics-deal-open">{{ report.deals.open }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Закрытые сделки</dt><dd id="analytics-deal-closed">{{ report.deals.closed }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Успешные сделки</dt><dd id="analytics-deal-won">{{ report.deals.counts.won }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Проигранные сделки</dt><dd id="analytics-deal-lost">{{ report.deals.counts.lost }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Конверсия закрытых сделок</dt><dd id="analytics-conversion">{% if report.deals.invalid_count %}Недоступна{% elif report.deals.conversion is None %}Нет данных{% else %}{{ report.deals.conversion|floatformat:"1" }}%{% endif %}</dd></dl>
-    <dl class="analytics-kpi analytics-money"><dt>Сумма успешно завершённых сделок</dt>
+<div class="analytics-kpis metric-grid">
+    <dl class="analytics-kpi metric-card"><dt>Всего сделок</dt><dd id="analytics-deal-total">{{ report.deals.total }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Открытые сделки</dt><dd id="analytics-deal-open">{{ report.deals.open }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Закрытые сделки</dt><dd id="analytics-deal-closed">{{ report.deals.closed }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Успешные сделки</dt><dd id="analytics-deal-won">{{ report.deals.counts.won }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Проигранные сделки</dt><dd id="analytics-deal-lost">{{ report.deals.counts.lost }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Конверсия закрытых сделок</dt><dd id="analytics-conversion">{% if report.deals.invalid_count %}Недоступна{% elif report.deals.conversion is None %}Нет данных{% else %}{{ report.deals.conversion|floatformat:"1" }}%{% endif %}</dd></dl>
+    <dl class="analytics-kpi metric-card analytics-money"><dt>Сумма успешно завершённых сделок</dt>
     {% if report.deals.won_amount is None %}<dd class="analytics-metric-error" role="alert" id="analytics-won-amount">Финансовый показатель не может быть достоверно вычислен. Обратитесь к администратору для проверки сумм сделок.</dd>
     {% else %}<dd id="analytics-won-amount">{{ report.deals.won_amount|floatformat:"2" }} ₽</dd>{% endif %}</dl>
-</div>
-<div class="analytics-definitions">
-<p>Открытые: новые, контакт, предложение. Закрытые: успешные и проигранные.</p>
-<p>Конверсия: успешные / (успешные + проигранные) × 100. Это текущее состояние сделок, созданных в выбранный период, а не сделки, закрытые за этот период. Округление — до одного знака.</p>
-<p>Сумма только успешных сделок, созданных за период. Это не фактически полученная выручка: платежи система не хранит.</p>
 </div>
 <div class="analytics-distributions">
 <section class="analytics-distribution" aria-labelledby="deal-distribution-title">
@@ -82,11 +80,12 @@
 <section class="analytics-current" aria-labelledby="current-workload">
 <h2 id="current-workload">Текущее состояние заявок и задач</h2>
 <p>Текущее состояние на момент открытия страницы, независимо от периода сделок и взаимодействий. Это текущая просрочка, а не история просрочек.</p>
-<div class="analytics-kpis">
-    <dl class="analytics-kpi"><dt>Доступные заявки</dt><dd id="analytics-request-total">{{ report.workload.requests.total }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Просроченные заявки</dt><dd id="analytics-request-overdue">{{ report.workload.requests.overdue }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Доступные задачи</dt><dd id="analytics-task-total">{{ report.workload.tasks.total }}</dd></dl>
-    <dl class="analytics-kpi"><dt>Просроченные задачи</dt><dd id="analytics-task-overdue">{{ report.workload.tasks.overdue }}</dd></dl>
+<div class="analytics-workload-layout">
+<div class="analytics-kpis metric-grid">
+    <dl class="analytics-kpi metric-card"><dt>Доступные заявки</dt><dd id="analytics-request-total">{{ report.workload.requests.total }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Просроченные заявки</dt><dd id="analytics-request-overdue">{{ report.workload.requests.overdue }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Доступные задачи</dt><dd id="analytics-task-total">{{ report.workload.tasks.total }}</dd></dl>
+    <dl class="analytics-kpi metric-card"><dt>Просроченные задачи</dt><dd id="analytics-task-overdue">{{ report.workload.tasks.overdue }}</dd></dl>
 </div>
 <figure id="workload-chart" aria-labelledby="current-workload" aria-describedby="workload-chart-description">
     <figcaption id="workload-chart-description">Доля текущих просрочек от доступных заявок или задач соответственно. Полный столбец означает, что все доступные записи этого вида просрочены. При отсутствии записей доля не определена.</figcaption>
@@ -97,5 +96,16 @@
     {% endfor %}
     </ul>
 </figure>
+</div>
 </section>
+<details class="analytics-methods">
+<summary>Методика расчёта и границы отчёта</summary>
+<div class="analytics-definitions">
+<p>Даты нужны для произвольного периода. Начальная дата включена с 00:00 UTC, конечная — до 00:00 следующего дня. Будущие даты запрещены; события позже момента расчёта не включаются.</p>
+<p>Сделки отбираются по дате создания (created_at), взаимодействия — по времени события (occurred_at). Этапы сделок показывают их текущее состояние: историю смены этапов и дату закрытия система не хранит.</p>
+<p>Открытые: новые, контакт, предложение. Закрытые: успешные и проигранные.</p>
+<p>Конверсия: успешные / (успешные + проигранные) × 100. Это текущее состояние сделок, созданных в выбранный период, а не сделки, закрытые за этот период. Округление — до одного знака.</p>
+<p>Сумма только успешных сделок, созданных за период. Это не фактически полученная выручка: платежи система не хранит.</p>
+</div>
+</details>
 {% endblock %}

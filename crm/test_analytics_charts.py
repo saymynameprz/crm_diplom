@@ -229,3 +229,129 @@ class AnalyticsChartTests(TestCase):
         self.assertContains(response,'caption>Точные значения')
         self.assertContains(response,'crm/analytics.css')
         self.assertNotContains(self.client.get(reverse('home')),'crm/analytics.css')
+
+
+class DashboardLayoutTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user('dashboard-manager')
+        cls.other = User.objects.create_user('dashboard-other')
+        cls.admin = User.objects.create_user('dashboard-admin', is_superuser=True, is_staff=False)
+        cls.staff = User.objects.create_user('dashboard-staff', is_staff=True)
+        cls.contact = Client.objects.create(full_name='Вымышленный клиент Dashboard')
+        own = ClientRequest.objects.create(client=cls.contact, title='Своя заявка', assigned_to=cls.manager, due_at=AT-timedelta(days=1))
+        foreign = ClientRequest.objects.create(client=cls.contact, title='Чужая заявка', assigned_to=cls.other, due_at=AT-timedelta(days=1))
+        for status, due in (('new', AT-timedelta(days=1)), ('completed', AT-timedelta(days=1)), ('new', None)):
+            Task.objects.create(request=own, title='Своя задача', assigned_to=cls.manager, status=status, due_at=due)
+        Task.objects.create(request=foreign, title='Чужая задача', assigned_to=cls.other, due_at=foreign.due_at)
+        Task.objects.create(request=foreign, title='Рассогласованная задача', assigned_to=cls.manager, due_at=foreign.due_at)
+        for owner in (cls.manager, cls.other):
+            for stage in ('new', 'won', 'lost'):
+                deal = Deal.objects.create(client=cls.contact, title='Учебная сделка', assigned_to=owner, stage=stage, amount='12.34')
+                Deal.objects.filter(pk=deal.pk).update(created_at=AT-timedelta(days=1))
+            ClientInteraction.objects.create(client=cls.contact, created_by=owner, interaction_type='call',
+                subject='Учебное событие', occurred_at=AT-timedelta(days=1))
+
+    def page(self, route, user, **params):
+        self.client.force_login(user)
+        with patch('crm.views.timezone.now', return_value=AT):
+            return self.client.get(reverse(route), params)
+
+    def markup(self, response):
+        from .tests import ShellMarkup
+        self.assertEqual(response.status_code, 200)
+        markup = ShellMarkup(response.content.decode())
+        self.assertEqual(markup.errors, [])
+        self.assertEqual(len(markup.ids), len(set(markup.ids)))
+        self.assertEqual(sum(tag == 'h1' for tag, _ in markup.elements), 1)
+        for _, attrs in markup.elements:
+            for ref in (attrs.get('aria-labelledby', '')+' '+attrs.get('aria-describedby', '')).split():
+                self.assertIn(ref, markup.ids)
+        return markup
+
+    def test_home_keeps_four_scoped_ids_links_and_superuser_only_tools(self):
+        expected = ((self.manager, (1, 3, 1, 1)), (self.admin, (2, 5, 2, 3)), (self.staff, (0, 0, 0, 0)))
+        ids = ('request-count', 'task-count', 'overdue-request-count', 'overdue-task-count')
+        for actor, counts in expected:
+            with self.subTest(actor=actor.username):
+                response = self.page('home', actor)
+                markup = self.markup(response)
+                self.assertContains(response, 'Главная панель')
+                for identifier, count in zip(ids, counts):
+                    self.assertContains(response, f'<dd id="{identifier}">{count}</dd>', count=1, html=True)
+                metrics = [a for tag, a in markup.elements if tag == 'a' and a.get('class') == 'dashboard-metric']
+                self.assertEqual([a['href'] for a in metrics], ['/requests/', '/tasks/', '/requests/?overdue=yes', '/tasks/?overdue=yes'])
+                for path in ('/optimization/', '/admin/'):
+                    if actor.is_superuser:
+                        self.assertContains(response, f'href="{path}"')
+                    else:
+                        self.assertNotContains(response, f'href="{path}"')
+                self.assertContains(response, 'action="/logout/"')
+
+    def test_home_empty_and_quick_links_add_no_queries(self):
+        from .views import home
+        request = RequestFactory().get('/')
+        request.user = self.staff
+        with patch('crm.views.timezone.now', return_value=AT) as clock, self.assertNumQueries(2):
+            response = home(request)
+        self.assertEqual(clock.call_count, 1)
+        self.markup(response)
+        self.assertContains(response, 'Доступных заявок и задач пока нет')
+        for name in ('client_list', 'request_list', 'task_list', 'deal_list', 'deal_kanban', 'interaction_list', 'analytics'):
+            self.assertContains(response, f'href="{reverse(name)}"')
+        self.assertNotContains(response, 'crm/analytics.css')
+
+    def test_analytics_retains_ids_charts_tables_and_native_methodology_for_all_periods(self):
+        for params in ({}, {'period': '30d'}, {'period': 'custom', 'start_date': '2026-10-01', 'end_date': '2026-10-26'}):
+            with self.subTest(params=params):
+                response = self.page('analytics', self.manager, **params)
+                markup = self.markup(response)
+                for identifier in ('analytics-deal-total', 'analytics-deal-open', 'analytics-deal-closed', 'analytics-deal-won',
+                                   'analytics-deal-lost', 'analytics-conversion', 'analytics-won-amount'):
+                    self.assertIn(identifier, markup.ids)
+                self.assertContains(response, '>Сумма успешно завершённых сделок</dt>')
+                self.assertContains(response, 'data-state="ready"', count=2)
+                self.assertEqual(sum(tag == 'table' for tag, _ in markup.elements), 2)
+                methods = next(attrs for tag, attrs in markup.elements if tag == 'details' and attrs.get('class') == 'analytics-methods')
+                self.assertNotIn('open', methods)
+                body = response.content.decode()
+                self.assertGreater(body.index('class="analytics-methods"'), body.index('id="workload-chart"'))
+                for text in ('00:00 UTC', 'created_at', 'occurred_at', 'Округление — до одного знака', 'платежи система не хранит'):
+                    self.assertContains(response, text)
+                self.assertContains(response, 'style="width: 33.3%"')
+
+    def test_invalid_dates_keep_inputs_errors_and_current_workload(self):
+        response = self.page('analytics', self.manager, period='custom', start_date='2026-10-03', end_date='2026-10-01')
+        self.markup(response)
+        self.assertContains(response, 'value="2026-10-03"')
+        self.assertContains(response, 'value="2026-10-01"')
+        self.assertContains(response, 'id="id_end_date_error"')
+        self.assertContains(response, 'aria-invalid="true"')
+        self.assertNotContains(response, 'id="analytics-deal-total"')
+        self.assertContains(response, 'id="analytics-request-total">1')
+        self.assertContains(response, 'id="analytics-task-total">3')
+        self.assertContains(response, 'id="workload-chart"')
+
+    def test_rendering_prepared_reports_and_dashboard_has_no_database_queries(self):
+        from django.template.loader import render_to_string
+        request = RequestFactory().get('/')
+        request.user = self.manager
+        response = self.page('analytics', self.manager)
+        data = {name: response.context[name] for name in ('report', 'charts', 'form')}
+        data['user'] = self.manager
+        with self.assertNumQueries(0):
+            render_to_string('crm/analytics.html', data, request=request)
+            render_to_string('crm/home.html', dict(user=self.manager, request_count=1, task_count=3,
+                overdue_request_count=1, overdue_task_count=1), request=request)
+
+    def test_large_money_keeps_all_digits_and_chart_geometry_contract(self):
+        Deal.objects.filter(assigned_to=self.manager).delete()
+        Deal.objects.bulk_create([Deal(client=self.contact, assigned_to=self.manager, title='Большая сумма', stage='won',
+            amount=Decimal('9999999999.99')) for _ in range(1001)])
+        Deal.objects.filter(assigned_to=self.manager).update(created_at=AT-timedelta(days=1))
+        response = self.page('analytics', self.manager)
+        self.markup(response)
+        self.assertEqual(response.context['report']['deals']['won_amount'], Decimal('10009999999989.99'))
+        self.assertContains(response, '10009999999989,99 ₽')
+        self.assertContains(response, 'id="analytics-conversion">100,0%')
+        self.assertContains(response, 'style="width: 100.0%"')
