@@ -442,3 +442,70 @@ class OptimizationInterfaceTests(TestCase):
         self.assertEqual(main["action"], self.url)
         self.assertContains(response, 'tabindex="0"')
         self.assertContains(response, 'scope="col"')
+
+
+class OptimizationPresentationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user('layout-opt-admin', is_superuser=True)
+        cls.manager = User.objects.create_user('layout-opt-first')
+        cls.other = User.objects.create_user('layout-opt-second')
+        cls.workers = [cls.manager, cls.other,
+            User.objects.create_user('layout-opt-third'), User.objects.create_user('layout-opt-fourth')]
+
+    data = OptimizationInterfaceTests.data
+    trap = OptimizationInterfaceTests.trap
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+        self.url = reverse('optimization')
+
+    def test_full_matrix_has_labeled_fields_local_regions_and_retained_errors(self):
+        page = self.client.get(self.url, {'request_count': '6', 'employee_count': '4'})
+        markup = OptimizationMarkup()
+        markup.feed(page.content.decode())
+        self.assertEqual(len([c for c in markup.controls if c.startswith('id_effort_')]), 24)
+        self.assertTrue(set(markup.controls) <= set(markup.labels))
+        self.assertTrue(set(markup.references) <= set(markup.ids))
+        self.assertEqual(len(markup.ids), len(set(markup.ids)))
+        for name in ('size-heading', 'employees-heading', 'matrix-heading', 'weights-heading'):
+            self.assertIn(name, markup.ids)
+        self.assertContains(page, 'aria-describedby="matrix-help optimization-scroll-help"')
+        response = self.client.post(self.url, {**self.data(), 'effort_0_0': '0', 'occupied_1': '3'})
+        self.assertContains(response, 'class="error form-error-summary" role="alert"')
+        self.assertContains(response, 'href="#id_effort_0_0"')
+        self.assertContains(response, 'name="effort_0_0" value="0"')
+        self.assertContains(response, 'id="id_effort_0_0_error"')
+        self.assertContains(response, 'aria-invalid="true"')
+        self.assertNotContains(response, 'id="optimization-results"')
+
+    def test_result_panels_distinguish_proof_limits_and_no_complete_plan(self):
+        from .tests import ShellMarkup
+        cases = [
+            (self.data(), 10000, ['FEASIBLE_NOT_PROVEN', 'OPTIMAL'], ['message-warning', 'message-success']),
+            (self.data(), 0, ['FEASIBLE_NOT_PROVEN', 'FEASIBLE_NOT_PROVEN'], ['message-warning'] * 2),
+            (self.trap(), 0, ['HEURISTIC_FAILED', 'UNKNOWN'], ['message-warning', 'message-info']),
+            ({**self.data(), 'effort_1_0': '', 'effort_1_1': ''}, 10000, ['HEURISTIC_FAILED', 'INFEASIBLE'], ['message-warning', 'message-error']),
+        ]
+        for data, limit, statuses, classes in cases:
+            with self.subTest(statuses=statuses), patch('crm.views.OPTIMIZATION_NODE_LIMIT', limit):
+                page = self.client.post(self.url, data)
+                markup = ShellMarkup(page.content.decode())
+                self.assertEqual(markup.errors, [])
+                self.assertEqual([a['data-status'] for tag, a in markup.elements if 'data-status' in a], statuses)
+                for result, expected_class in zip(page.context['recommendations'], classes):
+                    panel = page.content.decode().split(f'id="result-{page.context["recommendations"].index(result)+1}"', 1)[1].split('</section>', 1)[0]
+                    self.assertIn(expected_class, panel)
+                    self.assertIn(result['description'], panel)
+                    if result['complete']:
+                        self.assertIn('optimization-exact', panel)
+                        self.assertIn(result['metrics']['exact_objective'], panel)
+                    else:
+                        self.assertNotIn('optimization-metrics', panel)
+                if statuses[1] == 'OPTIMAL':
+                    self.assertContains(page, 'Точно: <code>19/26</code>')
+                    self.assertContains(page, 'B&amp;B нашёл план с меньшим F.')
+                    self.assertContains(page, 'Отдельные показатели C, U и T могут меняться в разные стороны.')
+                if not page.context.get('snapshot'):
+                    self.assertNotContains(page, 'Подготовить пакет заявок')
+                    self.assertNotContains(page, 'optimization-comparison')

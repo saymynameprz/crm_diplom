@@ -1,11 +1,13 @@
 {% extends "crm/base.html" %}
 {% block title %}Не удалось изменить этап{% endblock %}
+{% block card_class %}form-panel{% endblock %}
 {% block content %}
 <h1>Не удалось изменить этап</h1>
-<p class="error" role="alert">Проверьте этап и версию карточки. Сделка не изменена. Если доска устарела, откройте её заново.</p>
-<form method="post" action="{% url 'deal_change_stage' deal.pk %}">
-{% csrf_token %}{{ form.as_p }}
-<button type="submit">Переместить</button>
+<p class="message message-error" role="alert">Проверьте этап и версию карточки. Сделка не изменена. Если доска устарела, откройте её заново.</p>
+<form method="post" action="{% url 'deal_change_stage' deal.pk %}" class="form-layout">
+{% csrf_token %}{{ form.non_field_errors }}
+{{ form.expected_updated_at }}{{ form.expected_updated_at.errors }}
+<div class="form-field">{{ form.stage.as_field_group }}</div>
+<div class="actions form-actions"><button type="submit">Переместить</button><a class="button button-secondary" href="{% url 'deal_kanban' %}">Вернуться на доску</a></div>
 </form>
-<p><a href="{% url 'deal_kanban' %}">Вернуться на доску</a></p>
 {% endblock %}

@@ -1,9 +1,9 @@
     <article class="kanban-deal" data-deal-id="{{ deal.pk }}" data-change-url="{% url 'deal_change_stage' deal.pk %}">
         <span class="kanban-drag-handle" hidden>Перетащить</span>
-        <h3><a href="{{ deal.get_absolute_url }}">№{{ deal.pk }} · {{ deal.title }}</a></h3>
+        <h3><a href="{{ deal.get_absolute_url }}"><span class="kanban-id">№{{ deal.pk }}</span>{{ deal.title }}</a></h3>
         <dl>
             <dt>Клиент</dt><dd><a href="{{ deal.client.get_absolute_url }}">{{ deal.client }}</a></dd>
-            <dt>Сумма</dt><dd>{{ deal.amount|floatformat:"2" }} ₽</dd>
+            <dt>Сумма</dt><dd class="kanban-amount">{{ deal.amount|floatformat:"2" }} ₽</dd>
             <dt>Ответственный</dt><dd>{{ deal.assigned_to|default:"Не назначен" }}</dd>
             {% if deal.expected_close_date %}<dt>Планируемая дата закрытия</dt><dd>{{ deal.expected_close_date|date:"d.m.Y" }}</dd>{% endif %}
         </dl>

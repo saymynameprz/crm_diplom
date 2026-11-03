@@ -212,3 +212,68 @@ class KanbanTests(TestCase):
         self.assertNotContains(response, "<script>")
         self.assertContains(self.client.get(reverse("deal_list")), 'href="/deals/kanban/"')
         self.assertContains(self.client.get(self.own.get_absolute_url()), 'href="/deals/kanban/"')
+
+
+class KanbanPresentationTests(TestCase):
+    """Protect the fragment and fallback contracts used by the redesigned board."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user('layout-kanban-manager')
+        cls.contact = Client.objects.create(full_name='Учебный клиент с длинным названием')
+        cls.deal = Deal.objects.create(client=cls.contact, assigned_to=cls.manager,
+            title='Полное название без сокращения ' + 'Я' * 120, amount=Decimal('9999999999.99'))
+
+    def setUp(self):
+        self.client.force_login(self.manager)
+
+    def test_initial_and_replaced_columns_preserve_labeled_forms_and_versions(self):
+        from .tests import ShellMarkup
+        page = self.client.get(reverse('deal_kanban'))
+        markup = ShellMarkup(page.content.decode())
+        self.assertEqual(markup.errors, [])
+        self.assertEqual(len(markup.ids), len(set(markup.ids)))
+        for hook in ('kanban-feedback', 'kanban-status', 'kanban-refresh', 'kanban-dismiss'):
+            self.assertIn(hook, markup.ids)
+        controls = {a['id']: (tag, a) for tag, a in markup.elements if 'id' in a}
+        self.assertIn('hidden', controls['kanban-refresh'][1])
+        self.assertContains(page, 'class="kanban-column-header"', count=5)
+        self.assertContains(page, 'class="kanban-amount">9999999999,99 ₽')
+        self.assertContains(page, self.deal.title)
+        self.assertContains(page, f'class="button" href="{reverse("deal_create")}"')
+        response = self.client.post(reverse('deal_change_stage', args=[self.deal.pk]),
+            {'stage': 'contact', 'expected_updated_at': self.deal.updated_at.isoformat()},
+            HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 200)
+        for column in response.json()['columns']:
+            fragment = ShellMarkup(column['html'])
+            self.assertEqual(fragment.errors, [])
+            self.assertEqual(fragment.elements[0][0], 'section')
+            self.assertEqual(fragment.elements[0][1]['data-stage'], column['stage'])
+            if column['stage'] == 'contact':
+                self.deal.refresh_from_db()
+                inputs = fragment.forms[0]['inputs']
+                self.assertEqual({a['name'] for a in inputs}, {'csrfmiddlewaretoken', 'expected_updated_at'})
+                self.assertEqual(next(a['value'] for a in inputs if a['name'] == 'expected_updated_at'), self.deal.updated_at.isoformat())
+                self.assertIn(('select', {'name': 'stage', 'id': f'deal-stage-{self.deal.pk}'}), fragment.elements)
+                self.assertIn('kanban-drag-handle', column['html'])
+
+    def test_error_and_conflict_keep_distinct_alerts_and_safe_recovery(self):
+        from .tests import ShellMarkup
+        url = reverse('deal_change_stage', args=[self.deal.pk])
+        response = self.client.post(url, {'stage': 'invalid', 'expected_updated_at': 'broken'})
+        self.assertEqual(response.status_code, 400)
+        markup = ShellMarkup(response.content.decode())
+        self.assertEqual(markup.errors, [])
+        self.assertContains(response, 'message message-error', status_code=400)
+        self.assertContains(response, 'aria-invalid="true"', status_code=400)
+        self.assertContains(response, 'id="id_expected_updated_at_error"', status_code=400)
+        form = next(f for f in markup.forms if f.get('action') == url)
+        self.assertEqual(next(a['value'] for a in form['inputs'] if a['name'] == 'expected_updated_at'), 'broken')
+        Deal.objects.filter(pk=self.deal.pk).update(updated_at=self.deal.updated_at + timedelta(seconds=1))
+        response = self.client.post(url, {'stage': 'won', 'expected_updated_at': self.deal.updated_at.isoformat()})
+        self.assertEqual(response.status_code, 409)
+        self.assertContains(response, 'message message-warning', status_code=409)
+        self.assertContains(response, 'Карточка устарела', status_code=409)
+        self.assertNotContains(response, 'Сделка перемещена', status_code=409)
+        self.assertContains(response, 'class="button" href="/deals/kanban/">Обновить доску', status_code=409)

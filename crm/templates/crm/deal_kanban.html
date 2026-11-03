@@ -3,13 +3,16 @@
 {% block title %}Воронка продаж{% endblock %}
 {% block card_class %}kanban-shell{% endblock %}
 {% block content %}
-<h1>Воронка продаж</h1>
-<p><a href="{% url 'deal_list' %}">Список сделок</a> · <a href="{% url 'deal_create' %}">Добавить сделку</a></p>
-<p id="kanban-help"><span id="kanban-drag-help" hidden>Можно перетаскивать карточки между этапами. </span>Выберите этап и нажмите «Переместить». На узком экране прокручивайте доску по горизонтали. С клавиатуры: Tab для выбора формы, стрелки для прокрутки области доски.</p>
+<header class="page-header">
+    <div><h1>Воронка продаж</h1><p class="muted">Сделки по текущим этапам: от первого обращения до результата.</p></div>
+    <div class="actions"><a class="button button-secondary" href="{% url 'deal_list' %}">Список сделок</a><a class="button" href="{% url 'deal_create' %}">Добавить сделку</a></div>
+</header>
+<p id="kanban-help" class="table-help"><span id="kanban-drag-help" hidden>Можно перетаскивать карточки между этапами. </span>Выберите этап и нажмите «Переместить». На узком экране прокручивайте доску по горизонтали. С клавиатуры: Tab для выбора формы, стрелки для прокрутки области доски.</p>
 <div id="kanban-feedback" class="kanban-feedback" hidden>
+<strong>Состояние перемещения</strong>
 <p id="kanban-status" role="status" aria-live="polite"></p>
-<p><a id="kanban-refresh" href="{% url 'deal_kanban' %}" hidden>Обновить доску</a></p>
-<button type="button" id="kanban-dismiss" aria-label="Скрыть уведомление">Скрыть</button>
+<div class="actions"><a id="kanban-refresh" class="button button-secondary" href="{% url 'deal_kanban' %}" hidden>Обновить доску</a>
+<button type="button" id="kanban-dismiss" class="button-secondary" aria-label="Скрыть уведомление">Скрыть</button></div>
 </div>
 <div class="kanban-scroll" role="region" aria-label="Доска сделок" aria-describedby="kanban-help" tabindex="0">
 <div class="kanban-grid">

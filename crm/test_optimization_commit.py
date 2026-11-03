@@ -544,3 +544,69 @@ class OptimizationMigrationTests(TransactionTestCase):
             self.assertEqual((ClientRequest.objects.count(),Task.objects.count()),(3,3))
         finally:
             executor=MigrationExecutor(connection);executor.migrate(executor.loader.graph.leaf_nodes())
+
+
+class OptimizationConfirmationPresentationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user('layout-confirm-admin', is_superuser=True)
+        cls.workers = [User.objects.create_user('layout-confirm-first'), User.objects.create_user('layout-confirm-second')]
+        cls.contacts = [Client.objects.create(full_name='Учебный клиент предпросмотра')]
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def assert_accessible_markup(self, response):
+        from .tests import ShellMarkup
+        markup = ShellMarkup(response.content.decode())
+        self.assertEqual(markup.errors, [])
+        self.assertEqual(len(markup.ids), len(set(markup.ids)))
+        ids = set(markup.ids)
+        for tag, attrs in markup.elements:
+            for name in ('aria-describedby', 'aria-labelledby'):
+                self.assertTrue(set(attrs.get(name, '').split()) <= ids)
+            if tag == 'label':
+                self.assertIn(attrs['for'], ids)
+        return markup
+
+    def test_preview_has_explicit_creation_consents_and_receipt_preserves_missing_records(self):
+        raw = calculation(self.admin, self.workers, unproven=True)
+        page = self.client.post(reverse('optimization_preview'), details_data(raw, self.contacts))
+        markup = self.assert_accessible_markup(page)
+        self.assertContains(page, 'Следующая кнопка создаст реальные заявки')
+        self.assertContains(page, 'data-status="FEASIBLE_NOT_PROVEN"')
+        self.assertContains(page, 'class="form-field optimization-consent"', count=2)
+        form = next(f for f in markup.forms if f.get('id') == 'optimization-final')
+        self.assertEqual({a['name'] for a in form['inputs']}, {'csrfmiddlewaretoken', 'snapshot', 'confirm_create', 'accept_unproven'})
+        self.assertEqual(OptimizationCommit.objects.count(), 0)
+        signed = page.context['final_form']['snapshot'].value()
+        response = self.client.post(reverse('optimization_confirm'), {'snapshot': signed, 'confirm_create': 'on', 'accept_unproven': 'on'})
+        page = self.client.get(response.url)
+        self.assert_accessible_markup(page)
+        self.assertContains(page, 'message message-success')
+        record = OptimizationCommit.objects.get()
+        Task.objects.filter(pk=record.created_ids[0]['task_id']).delete()
+        ClientRequest.objects.filter(pk=record.created_ids[0]['request_id']).delete()
+        page = self.client.get(response.url)
+        self.assertContains(page, 'запись удалена', count=2)
+        self.assertEqual(OptimizationCommit.objects.get().created_ids, record.created_ids)
+
+    def test_after_commit_retry_warning_keeps_original_snapshot_and_both_checked_consents(self):
+        signed = prepared(self.admin, self.workers, self.contacts, unproven=True)
+        data = {'snapshot': signed, 'confirm_create': 'on', 'accept_unproven': 'on'}
+        with patch('crm.views.redirect', side_effect=RuntimeError('synthetic response failure')), self.assertLogs('crm.views', level='ERROR'):
+            page = self.client.post(reverse('optimization_confirm'), data)
+        self.assertEqual(page.status_code, 503)
+        markup = self.assert_accessible_markup(page)
+        self.assertContains(page, 'message message-warning', status_code=503)
+        self.assertContains(page, 'Пакет мог быть создан', status_code=503)
+        self.assertNotContains(page, 'Данные не созданы', status_code=503)
+        form = next(f for f in markup.forms if f.get('id') == 'optimization-retry')
+        fields = {a['name']: a for a in form['inputs']}
+        self.assertEqual(fields['snapshot']['value'], signed)
+        for name in ('confirm_create', 'accept_unproven'):
+            self.assertIn('checked', fields[name])
+        ids = OptimizationCommit.objects.get().created_ids
+        self.assertEqual(self.client.post(reverse('optimization_confirm'), data).status_code, 302)
+        self.assertEqual(OptimizationCommit.objects.get().created_ids, ids)
+        self.assertEqual((ClientRequest.objects.count(), Task.objects.count(), OptimizationCommit.objects.count()), (2, 2, 1))

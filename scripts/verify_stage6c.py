@@ -62,7 +62,11 @@ with tempfile.TemporaryDirectory(prefix='crm-kanban-validation-') as directory:
         content=re.search(r'<article[^>]+data-deal-id="'+str(pk)+r'"[^>]*>(.*?)</article>',body,re.S)[1]
         return re.search(r'name="expected_updated_at" value="([^"]+)"',content)[1]
     def columns(body):
-        return {stage:(int(re.search(r'class="column-count">Сделок: (\d+)',content)[1]), re.findall(r'data-deal-id="(\d+)"',content)) for stage,content in re.findall(r'<section[^>]+data-stage="([^"]+)"[^>]*>(.*?)</section>',body,re.S)}
+        result = {}
+        for stage, content in re.findall(r'<section[^>]+data-stage="([^"]+)"[^>]*>(.*?)</section>', body, re.S):
+            count = re.search(r'class="column-count">Сделок: (.*?)</p>', content)[1]
+            result[stage] = (int(re.sub(r'<[^>]+>', '', count)), re.findall(r'data-deal-id="(\d+)"', content))
+        return result
     with open(artifacts/'server.log','w') as log:
         server=subprocess.Popen([python,'manage.py','runserver',f'127.0.0.1:{options.port}','--noreload'],cwd=root,env=env,stdout=log,stderr=log)
         try:
@@ -241,7 +245,8 @@ with tempfile.TemporaryDirectory(prefix='crm-kanban-validation-') as directory:
                         source.scroll_into_view_if_needed()
                         target_visible=column(stage).locator('h2').evaluate('''e=>{
                             const a=e.getBoundingClientRect(),b=e.closest('.kanban-scroll').getBoundingClientRect();
-                            return a.left+a.width/2>=b.left && a.left+a.width/2<=b.right;
+                            return a.left+a.width/2>=b.left && a.left+a.width/2<=b.right
+                                && a.top+a.height/2>=0 && a.top+a.height/2<=window.innerHeight;
                         }''')
                         if width>=1280 and target_visible:
                             source.drag_to(column(stage).locator('h2'))

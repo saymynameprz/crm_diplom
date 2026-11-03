@@ -107,60 +107,117 @@ textarea { resize: vertical; }
 .stage-proposal { background: var(--color-warning-bg); color: var(--color-warning-text); }
 .stage-won { background: var(--color-success-bg); color: var(--color-success-text); }
 .stage-lost { background: var(--color-error-bg); color: var(--color-error-text); }
-.kanban-shell { max-width: none; min-width: 0; padding: 1rem; }
-.kanban-scroll { overflow-x: auto; max-width: 100%; padding-bottom: 1rem; }
-.kanban-grid { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: .75rem; align-items: start; }
-.kanban-column { min-width: 0; padding: .75rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: .6rem; }
+/* Kanban retains the server fragments and drag-and-drop state selectors. */
+.kanban-shell { max-width: none; min-width: 0; }
+.kanban-scroll { overflow-x: auto; max-width: 100%; padding: var(--space-2) var(--space-1) var(--space-4); }
+.kanban-grid { display: grid; grid-template-columns: repeat(5, minmax(17rem, 1fr)); gap: var(--space-3); align-items: start; }
+.kanban-column { min-width: 0; padding: var(--space-3); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.kanban-column-header { padding-bottom: var(--space-3); margin-bottom: var(--space-3); border-bottom: 1px solid var(--color-border); }
 .kanban-column h2 { font-size: 1rem; margin: 0; overflow-wrap: anywhere; }
-.column-count { margin: .6rem 0; font-weight: 600; }
-.kanban-deal { min-width: 0; padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--color-border); border-radius: .5rem; background: var(--color-surface); overflow-wrap: anywhere; }
-.kanban-deal h3 { font-size: 1rem; margin: 0 0 .75rem; }
-.kanban-deal dd { margin-bottom: .6rem; font-size: .9rem; }
-.kanban-deal label { font-size: .9rem; }
-.kanban-deal select { padding: .5rem .25rem; }
-.kanban-deal button { margin-top: .6rem; padding: .6rem .7rem; font-size: .9rem; }
-.kanban-drag-handle { display: block; color: var(--color-text-muted); font-size: .85rem; cursor: grab; margin-bottom: .5rem; }
+.kanban-column .status { padding: var(--space-1) var(--space-2); font-size: var(--font-size-small); }
+.column-count { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--font-size-small); }
+.column-count strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
+.kanban-deal { min-width: 0; padding: var(--space-3); margin-bottom: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-raised); overflow-wrap: anywhere; }
+.kanban-deal:last-child { margin-bottom: 0; }
+.kanban-deal h3 { font-size: 1rem; line-height: 1.5; margin: 0 0 var(--space-3); }
+.kanban-deal a, .kanban-more a { color: var(--color-info-text); text-underline-offset: .2em; }
+.kanban-id { display: block; color: var(--color-text-muted); font-size: var(--font-size-small); font-weight: 400; }
+.kanban-deal dl { margin: 0; }
+.kanban-deal dt { font-size: var(--font-size-small); }
+.kanban-deal dd { margin: 0 0 var(--space-2); font-size: var(--font-size-small); }
+.kanban-deal .kanban-amount { color: var(--color-text); font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kanban-deal form { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.kanban-deal label { margin: 0 0 var(--space-2); font-size: var(--font-size-small); }
+.kanban-deal select { padding: var(--space-2); }
+.kanban-deal button { width: 100%; margin-top: var(--space-2); padding: var(--space-2); font-size: var(--font-size-small); }
+.kanban-drag-handle { display: block; color: var(--color-text-muted); font-size: var(--font-size-small); cursor: grab; margin-bottom: var(--space-2); }
 .kanban-drag-handle[hidden] { display: none; }
+.kanban-empty { margin: 0; padding: var(--space-4) var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-small); border: 1px dashed var(--color-control-border); border-radius: var(--radius-sm); }
+.kanban-more { margin: var(--space-3) 0 0; font-size: var(--font-size-small); }
 .kanban-deal.is-dragging { opacity: .55; }
 .kanban-column.is-drop-target { outline: 3px solid var(--color-accent); outline-offset: -3px; background: var(--color-info-bg); }
-.kanban-deal.is-saving { opacity: .65; cursor: progress; }
+.kanban-deal.is-saving { border-color: var(--color-warning-text); cursor: progress; }
 #kanban-status:empty { display: none; }
+.kanban-feedback { margin: var(--space-4) 0; padding: var(--space-4); border: 1px solid var(--color-info-text); border-radius: var(--radius-md); background: var(--color-info-bg); color: var(--color-info-text); }
+.kanban-feedback[hidden], .kanban-feedback [hidden] { display: none; }
+.kanban-feedback p { margin: var(--space-2) 0 0; }
+.kanban-feedback .actions { margin-top: var(--space-3); gap: var(--space-3); }
+.kanban-feedback button { margin: 0; padding: var(--space-2) var(--space-4); }
 @media (prefers-reduced-motion: no-preference) {
     .kanban-deal { transition: opacity .1s; }
 }
-.kanban-feedback { pointer-events: none; position: fixed; left: 1rem; right: 1rem; bottom: 1rem; max-width: 36rem; z-index: 20; padding: .9rem; border: 1px solid var(--color-control-border); border-radius: .5rem; background: var(--color-surface); box-shadow: 0 4px 20px #0006; }
-.kanban-feedback[hidden] { display: none; }
-.kanban-feedback p { margin: 0 0 .4rem; }
-.kanban-feedback button { margin: .25rem 0 0; padding: .35rem .6rem; font-size: .85rem; }
 
-.kanban-feedback a, .kanban-feedback button { pointer-events: auto; }
-
-.optimization-shell { max-width: 74rem; min-width: 0; }
-.optimization-shell fieldset { min-width: 0; border: 1px solid var(--color-border); border-radius: .4rem; padding: 1rem; }
-.optimization-shell legend { font-weight: 600; }
-.optimization-size { margin-bottom: 2rem; }
-.optimization-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem 1rem; align-items: center; }
-.optimization-grid label { margin: .5rem 0; }
-.optimization-weights, .optimization-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.optimization-scroll { max-width: 100%; overflow-x: auto; margin: 1rem 0 2rem; padding-bottom: .5rem; }
-.optimization-shell table { width: 100%; border-collapse: collapse; }
-.optimization-table { min-width: 52rem; table-layout: fixed; }
-.optimization-shell caption { text-align: left; font-weight: 600; padding: .5rem 0; }
-.optimization-shell th, .optimization-shell td { text-align: left; vertical-align: top; padding: .65rem .5rem; border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
-.optimization-table label { margin: 0 0 .4rem; font-size: .85rem; }
-.optimization-table input:not([type=hidden]), .optimization-table select { padding: .6rem .35rem; }
-.optimization-shell .errorlist { padding-left: 1rem; }
-.optimization-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--color-border); border-radius: .5rem; }
+/* Optimization is a server-rendered sequence; inputs and exact metrics are unchanged. */
+.optimization-shell { max-width: var(--layout-wide); min-width: 0; }
+.optimization-shell h2 { margin: 0 0 var(--space-3); font-size: 1.25rem; overflow-wrap: anywhere; }
+.optimization-shell h3 { margin: 0 0 var(--space-3); font-size: 1.125rem; overflow-wrap: anywhere; }
+.optimization-shell .message p { margin: var(--space-2) 0 0; }
+.optimization-shell .message code { display: block; margin-top: var(--space-2); font-size: var(--font-size-small); }
+.optimization-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); padding: 0; margin: 0 0 var(--space-5); list-style: none; }
+.optimization-steps li { min-width: 0; padding: var(--space-3); border-bottom: 2px solid var(--color-control-border); color: var(--color-text-muted); font-size: var(--font-size-small); overflow-wrap: anywhere; }
+.optimization-steps [aria-current] { background: var(--color-info-bg); color: var(--color-info-text); border-color: var(--color-accent); font-weight: 600; }
+.optimization-section { min-width: 0; padding: var(--space-5); margin: var(--space-5) 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.optimization-section > p:first-of-type { margin-top: 0; }
+.optimization-shell fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.optimization-shell legend { font-size: var(--font-size-small); color: var(--color-text-muted); font-weight: 600; }
+.optimization-grid, .optimization-weights, .optimization-detail-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.optimization-size { max-width: 40rem; }
+.optimization-size button { margin-top: var(--space-4); }
+.optimization-weights { max-width: 32rem; }
+.optimization-shell .form-field label { margin: 0; }
+.optimization-scroll { max-width: 100%; overflow-x: auto; margin: var(--space-4) 0; padding: var(--space-1) var(--space-1) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.optimization-shell table { width: 100%; border-collapse: collapse; font-size: var(--font-size-small); }
+.optimization-table { min-width: 60rem; table-layout: auto; }
+.optimization-shell caption { text-align: left; color: var(--color-text-muted); padding: var(--space-3); }
+.optimization-shell th, .optimization-shell td { text-align: left; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
+.optimization-shell thead th { background: var(--color-surface-raised); color: var(--color-text-muted); font-weight: 600; }
+.optimization-shell tbody tr:last-child > * { border-bottom: 0; }
+.optimization-shell tbody tr:focus-within { background: var(--color-surface-hover); }
+.optimization-shell table a { color: var(--color-info-text); }
+.optimization-table th { min-width: 8rem; }
+.optimization-table th:first-child { min-width: 15rem; }
+.optimization-table label { font-size: var(--font-size-small); }
+.optimization-table input:not([type=hidden]), .optimization-table select { padding: var(--space-2); font-size: 1rem; }
+.optimization-matrix th { min-width: 12rem; }
+.optimization-matrix th:first-child { min-width: 8rem; }
+.optimization-matrix th:nth-child(2) { min-width: 16rem; }
+.optimization-shell .errorlist { margin: 0; padding-left: var(--space-4); font-size: var(--font-size-small); }
+.optimization-shell > form > .form-error-summary { margin-top: var(--space-5); }
+.optimization-results-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: var(--space-4); }
+.optimization-result { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); }
+.optimization-result .message { margin: 0 0 var(--space-3); }
+.optimization-reason { color: var(--color-text-muted); font-size: var(--font-size-small); }
+.optimization-result > p { font-size: var(--font-size-small); }
+.optimization-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: var(--space-4) 0; }
+.optimization-metrics > div { min-width: 0; padding: var(--space-3); background: var(--color-surface-raised); border-radius: var(--radius-sm); }
+.optimization-metrics dt { font-size: var(--font-size-small); }
+.optimization-metrics dd { margin: var(--space-2) 0 0; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.optimization-exact { display: block; margin-top: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-small); font-weight: 400; }
+.optimization-shell code { font-size: var(--font-size-small); overflow-wrap: anywhere; }
 .optimization-assignments { min-width: 28rem; }
-.optimization-comparison td { white-space: nowrap; }
+.optimization-assignments th { min-width: 5rem; }
+.optimization-assignments th:not(:first-child) { min-width: 10rem; }
+.optimization-comparison td { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .optimization-comparison th:first-child { min-width: 12rem; }
-.optimization-shell code { overflow-wrap: anywhere; }
-@media (max-width: 600px) {
-    .optimization-shell { padding: 1rem; }
-    .optimization-metrics, .optimization-weights { grid-template-columns: minmax(0, 1fr); }
-    .optimization-result { padding: .65rem; }
+.optimization-next { border-top: 3px solid var(--color-accent); }
+.optimization-next button { margin-top: var(--space-3); }
+.optimization-detail-fields { margin: var(--space-5) 0; align-items: start; }
+.optimization-consent { grid-template-columns: 1.25rem minmax(0, 1fr); align-items: start; margin-top: var(--space-4); padding: var(--space-4); border: 1px solid var(--color-control-border); border-radius: var(--radius-sm); }
+.optimization-consent > label { grid-column: 2; min-height: var(--size-control); font-size: 1rem; }
+.optimization-shell .optimization-consent input[type=checkbox] { grid-column: 1; grid-row: 1; width: 1.25rem; height: 1.25rem; margin: var(--space-1) 0; padding: 0; }
+.optimization-consent > .errorlist { grid-column: 1 / -1; }
+.optimization-create { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 3px solid var(--color-accent); }
+@media (max-width: 1023px) {
+    .optimization-results-grid { grid-template-columns: minmax(0, 1fr); }
 }
-.optimization-shell input[type=checkbox] { width: auto; }
+@media (max-width: 600px) {
+    .kanban-grid { grid-template-columns: repeat(5, minmax(15rem, 1fr)); }
+    .optimization-section, .optimization-result { padding: var(--space-4); }
+    .optimization-grid, .optimization-weights, .optimization-detail-fields, .optimization-metrics { grid-template-columns: minmax(0, 1fr); }
+    .optimization-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .optimization-steps li { padding: var(--space-2); }
+    .optimization-consent { padding: var(--space-3); }
+}
 
 /* Shared shell; existing component layouts above retain their responsibilities. */
 .app-shell { display: grid; grid-template-columns: var(--size-sidebar) minmax(0, 1fr); min-height: 100dvh; }

@@ -1,7 +1,9 @@
 {% extends "crm/base.html" %}
 {% block title %}Конфликт изменения этапа{% endblock %}
+{% block card_class %}form-panel{% endblock %}
 {% block content %}
 <h1>Конфликт изменения этапа</h1>
-<p role="alert">{{ message }}</p>
-<p><a href="{% url 'deal_kanban' %}">Обновить доску</a></p>
+<div class="message message-warning" role="alert"><strong>Карточка устарела</strong><p>{{ message }}</p></div>
+<p class="muted">Сверьте актуальный этап после обновления и повторите действие, если оно ещё нужно.</p>
+<div class="actions form-actions"><a class="button" href="{% url 'deal_kanban' %}">Обновить доску</a></div>
 {% endblock %}
