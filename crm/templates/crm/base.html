@@ -37,7 +37,12 @@
         <a class="brand" href="{% url 'home' %}"><span class="brand-mark">CRM</span><span>Дипломная CRM</span></a>
     {% endif %}
     <main id="main-content" class="card {% block card_class %}{% endblock %}" tabindex="-1">
-        {% if messages %}<div aria-live="polite">{% for message in messages %}<p class="notice">{{ message }}</p>{% endfor %}</div>{% endif %}
+        {% if messages %}<div class="system-messages" aria-live="polite">{% for message in messages %}
+            <div class="message {% if message.level_tag == 'success' %}message-success{% elif message.level_tag == 'warning' %}message-warning{% elif message.level_tag == 'error' %}message-error{% else %}message-info{% endif %}">
+                <strong>{% if message.level_tag == 'success' %}Успех{% elif message.level_tag == 'warning' %}Предупреждение{% elif message.level_tag == 'error' %}Ошибка{% else %}Информация{% endif %}</strong>
+                <p class="notice">{{ message }}</p>
+            </div>
+        {% endfor %}</div>{% endif %}
         {% block content %}{% endblock %}
     </main>
     {% if user.is_authenticated and current != 'login' %}

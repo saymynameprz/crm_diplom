@@ -1,33 +1,34 @@
 {% extends "crm/base.html" %}
 {% block title %}Сделки{% endblock %}
-{% block card_class %}wide{% endblock %}
+{% block card_class %}wide records-page{% endblock %}
 {% block content %}
-<h1>Сделки</h1>
-<p><a href="{% url 'deal_kanban' %}">Воронка продаж</a></p>
-<p><a class="button" href="{% url 'deal_create' %}">Добавить сделку</a></p>
+<header class="page-header"><div><h1>Сделки</h1><p class="muted">{% if user.is_superuser %}Все доступные сделки{% else %}Мои сделки{% endif %}</p></div>
+<div class="actions"><a class="button button-secondary" href="{% url 'deal_kanban' %}">Воронка продаж</a><a class="button" href="{% url 'deal_create' %}">Добавить сделку</a></div></header>
 <form method="get" class="filters">
-<label for="q">Поиск по сделке или клиенту</label><input type="search" name="q" id="q" value="{{ query }}">
-<label for="stage">Этап</label><select name="stage" id="stage"><option value="">Все этапы</option>
+<div><label for="q">Поиск по сделке или клиенту</label><input type="search" name="q" id="q" value="{{ query }}"></div>
+<div><label for="stage">Этап</label><select name="stage" id="stage"><option value="">Все этапы</option>
 {% for value, label in stage_choices %}<option value="{{ value }}" {% if stage_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-</select>
-<label for="sort">Дата создания</label><select name="sort" id="sort"><option value="newest">Сначала новые</option><option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option></select>
-<div class="actions"><button type="submit">Найти</button><a href="{% url 'deal_list' %}">Сбросить</a></div>
+</select></div>
+<div><label for="sort">Дата создания</label><select name="sort" id="sort"><option value="newest">Сначала новые</option><option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option></select></div>
+<div class="actions filter-actions"><button type="submit">Найти</button><a href="{% url 'deal_list' %}">Сбросить</a></div>
 </form>
-<div class="request-table"><table>
+{% if deals %}
+<p class="table-help">Все столбцы доступны при горизонтальной прокрутке таблицы, в том числе клавишами ← и →.</p>
+<div class="table-region table-region-wide" role="region" aria-label="Таблица сделок" tabindex="0"><table class="data-table">
 <caption class="visually-hidden">Доступные сделки</caption>
-<thead><tr><th>Сделка</th><th>Клиент</th><th>Сумма, руб.</th><th>Этап</th><th>Ответственный</th><th>Создана (UTC)</th></tr></thead>
+<thead><tr><th scope="col">Сделка</th><th scope="col">Клиент</th><th scope="col">Сумма, руб.</th><th scope="col">Этап</th><th scope="col">Ответственный</th><th scope="col">План закрытия</th><th scope="col">Создана (UTC)</th></tr></thead>
 <tbody>{% for deal in deals %}<tr>
 <td data-label="Сделка"><a href="{{ deal.get_absolute_url }}">{{ deal.title }}</a></td>
-<td data-label="Клиент"><a href="{{ deal.client.get_absolute_url }}">{{ deal.client }}</a></td>
-<td data-label="Сумма">{{ deal.amount|floatformat:"2" }} ₽</td>
+<td class="record-cell" data-label="Клиент"><a href="{{ deal.client.get_absolute_url }}">{{ deal.client }}</a></td>
+<td class="record-amount" data-label="Сумма">{{ deal.amount|floatformat:"2" }} ₽</td>
 <td data-label="Этап"><span class="status stage-{{ deal.stage }}">{{ deal.get_stage_display }}</span></td>
 <td data-label="Ответственный">{{ deal.assigned_to|default:"Не назначен" }}</td>
-<td data-label="Создана (UTC)">{{ deal.created_at|date:"d.m.Y H:i" }}</td>
-</tr>{% empty %}<tr><td colspan="6">{% if query or stage_filter %}Сделки не найдены.{% else %}Доступных сделок пока нет.{% endif %}</td></tr>{% endfor %}</tbody>
+<td class="record-date" data-label="План закрытия">{{ deal.expected_close_date|date:"d.m.Y"|default:"Не указана" }}</td>
+<td class="record-date" data-label="Создана (UTC)">{{ deal.created_at|date:"d.m.Y H:i" }}</td>
+</tr>{% endfor %}</tbody>
 </table></div>
-{% if is_paginated %}<nav class="pagination" aria-label="Страницы сделок">
-{% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
-<span>Страница {{ page_obj.number }} из {{ paginator.num_pages }}</span>
-{% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
-</nav>{% endif %}
+{% else %}
+<div class="empty-state">{% if query or stage_filter %}Сделки не найдены.{% else %}Доступных сделок пока нет.{% endif %}</div>
+{% endif %}
+{% include "crm/_pagination.html" with page_label="Страницы сделок" %}
 {% endblock %}

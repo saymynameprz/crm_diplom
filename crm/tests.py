@@ -577,3 +577,161 @@ class CrudFormPresentationTests(TestCase):
         self.assertContains(response, "Данные не сохранены.")
         self.assertContains(response, "Сохранённый текст &lt;проверка&gt;")
         self.assertEqual(self.state(), before)
+
+
+class RecordComponentsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_user("records-admin", is_superuser=True)
+        cls.manager = User.objects.create_user("records-manager")
+        cls.other = User.objects.create_user("records-other")
+        cls.records = {}
+        for index in range(12):
+            contact = Contact.objects.create(full_name=f"Page client {index}", company="Учебная организация",
+                phone="+0 000 000", email="synthetic@example.invalid", notes="Полное примечание")
+            linked = ClientRequest.objects.create(client=contact, title=f"Page request {index}", assigned_to=cls.manager,
+                description="Полное описание заявки", due_at=timezone.now() - timedelta(days=1))
+            task = Task.objects.create(request=linked, title=f"Page task {index}", assigned_to=cls.manager,
+                description="Полное описание задачи", due_at=linked.due_at)
+            deal = Deal.objects.create(client=contact, title=f"Page deal {index}", amount="9999999999.99", assigned_to=cls.manager,
+                description="Полное описание сделки", expected_close_date="2028-01-16")
+            interaction = ClientInteraction.objects.create(client=contact, subject=f"Page event {index}", created_by=cls.manager,
+                interaction_type="call", occurred_at=timezone.now() - timedelta(days=1), description="Полное описание события")
+            if not index:
+                cls.records = dict(client=contact, request=linked, task=task, deal=deal, interaction=interaction)
+        cls.foreign = ClientRequest.objects.create(client=contact, title="Private request", assigned_to=cls.other)
+
+    def filters(self, name):
+        extras = {"client": {"company": "yes"}, "request": {"status": "new", "overdue": "yes"},
+            "task": {"status": "new", "overdue": "yes"}, "deal": {"stage": "new"},
+            "interaction": {"interaction_type": "call"}}
+        return {"q": "Page", "sort": "oldest", **extras[name]}
+
+    def inspect(self, response):
+        self.assertEqual(response.status_code, 200)
+        markup = ShellMarkup(response.content.decode())
+        self.assertEqual(markup.errors, [])
+        self.assertEqual(len(markup.ids), len(set(markup.ids)))
+        ids = set(markup.ids)
+        for tag in ("main", "h1"):
+            self.assertEqual(sum(t == tag for t, _ in markup.elements), 1)
+        for _, attrs in markup.elements:
+            for target in (attrs.get("aria-describedby", "") + " " + attrs.get("aria-labelledby", "")).split():
+                self.assertIn(target, ids)
+        labels = [a["for"] for tag, a in markup.elements if tag == "label"]
+        for tag, attrs in markup.elements:
+            if tag in ("input", "select", "textarea") and attrs.get("type") != "hidden":
+                self.assertIn(attrs["id"], labels)
+        return markup
+
+    def test_five_tables_have_headers_named_keyboard_regions_and_get_filters(self):
+        for actor in (self.admin, self.manager):
+            self.client.force_login(actor)
+            for name in self.records:
+                with self.subTest(actor=actor.username, name=name):
+                    response = self.client.get(reverse(name + "_list"), self.filters(name))
+                    markup = self.inspect(response)
+                    self.assertTrue(any(tag == "caption" for tag, _ in markup.elements))
+                    headers = [attrs for tag, attrs in markup.elements if tag == "th"]
+                    self.assertTrue(headers)
+                    self.assertTrue(all(attrs.get("scope") == "col" for attrs in headers))
+                    region = next(attrs for tag, attrs in markup.elements if attrs.get("class", "").startswith("table-region"))
+                    self.assertEqual(region["role"], "region")
+                    self.assertEqual(region["tabindex"], "0")
+                    self.assertTrue(region["aria-label"])
+                    form = next(form for form in markup.forms if form.get("class") == "filters")
+                    self.assertEqual(form["method"], "get")
+                    self.assertContains(response, 'value="Page"')
+                    self.assertContains(response, 'action="/logout/"')
+
+    def test_pagination_preserves_all_filters_and_only_available_links(self):
+        from urllib.parse import parse_qs, urlsplit
+        self.client.force_login(self.manager)
+        for name in self.records:
+            with self.subTest(name=name):
+                params = self.filters(name)
+                first = self.client.get(reverse(name + "_list"), params)
+                markup = self.inspect(first)
+                next_page = next(a["href"] for tag, a in markup.elements if tag == "a" and "page=2" in a.get("href", ""))
+                self.assertEqual(parse_qs(urlsplit(next_page).query), {**{key: [value] for key, value in params.items()}, "page": ["2"]})
+                self.assertFalse(any("page=0" in a.get("href", "") for _, a in markup.elements))
+                second = self.client.get(reverse(name + "_list") + next_page)
+                self.inspect(second)
+                self.assertEqual(second.context["page_obj"].number, 2)
+                self.assertEqual(len(second.context["object_list"]), 2)
+                self.assertContains(second, "Страница 2 из 2")
+                self.assertNotContains(second, "page=3")
+                self.assertContains(second, 'class="pagination-disabled"')
+
+    def test_detail_sections_keep_fields_related_links_and_role_actions(self):
+        for actor in (self.admin, self.manager):
+            self.client.force_login(actor)
+            for name, record in self.records.items():
+                with self.subTest(actor=actor.username, name=name):
+                    response = self.client.get(record.get_absolute_url())
+                    self.inspect(response)
+                    self.assertContains(response, 'class="record-facts"')
+                    self.assertContains(response, reverse(name + "_update", kwargs={"pk": record.pk}))
+                    delete = reverse(name + "_delete", kwargs={"pk": record.pk})
+                    if actor.is_superuser:
+                        self.assertContains(response, delete)
+                    else:
+                        self.assertNotContains(response, delete)
+                    if name == "client":
+                        for related in (self.records["request"], self.records["deal"], self.records["interaction"]):
+                            self.assertContains(response, related.get_absolute_url())
+                        self.assertContains(response, "Полное примечание")
+                    elif name == "request":
+                        self.assertContains(response, self.records["task"].get_absolute_url())
+                    elif name == "task":
+                        self.assertContains(response, self.records["request"].get_absolute_url())
+                    if name == "deal":
+                        self.assertContains(response, "9999999999,99 ₽")
+                        self.assertContains(response, "16.01.2028")
+
+    def test_list_rows_keep_full_long_values_and_private_scope(self):
+        contact = self.records["client"]
+        contact.full_name = "ДлинноеИмя" * 20
+        contact.save()
+        self.client.force_login(self.manager)
+        self.assertContains(self.client.get(reverse("client_list"), {"sort": "oldest"}), contact.full_name)
+        self.assertNotContains(self.client.get(reverse("request_list")), self.foreign.title)
+        response = self.client.get(reverse("deal_list"), {"sort": "oldest"})
+        self.assertContains(response, "9999999999,99 ₽")
+        self.assertContains(response, "16.01.2028")
+
+    def test_empty_and_filtered_states_include_pagination_and_invalid_filter_errors(self):
+        self.client.force_login(self.other)
+        for name in ("request", "task", "deal", "interaction"):
+            with self.subTest(name=name):
+                params = {"q": "No matching record"}
+                response = self.client.get(reverse(name + "_list"), params)
+                self.inspect(response)
+                self.assertContains(response, 'class="empty-state"')
+                self.assertNotContains(response, 'class="data-table"')
+                self.assertContains(response, "Страница 1 из 1")
+                self.assertNotContains(response, "page=2")
+        invalid = self.client.get(reverse("interaction_list"), {"client": "invalid"})
+        self.inspect(invalid)
+        self.assertContains(invalid, 'aria-invalid="true"')
+
+    def test_message_levels_have_text_markers_safe_classes_and_escaped_content(self):
+        from django.contrib.messages.storage.base import Message
+        from django.template.loader import render_to_string
+        from django.test import RequestFactory
+        from django.urls import resolve
+        request = RequestFactory().get("/")
+        request.user = self.manager
+        request.resolver_match = resolve("/")
+        for level, tag, label in ((10, "info", "Информация"), (20, "info", "Информация"), (25, "success", "Успех"),
+                                  (30, "warning", "Предупреждение"), (40, "error", "Ошибка")):
+            with self.subTest(level=level):
+                body = render_to_string("crm/base.html", {"user": self.manager,
+                    "messages": [Message(level, '<script>Учебный текст</script>', extra_tags='untrusted-tag')]}, request=request)
+                self.assertIn('aria-live="polite"', body)
+                self.assertIn('class="system-messages"', body)
+                self.assertIn('class="message message-' + tag + '"', body)
+                self.assertIn(label, body)
+                self.assertIn('&lt;script&gt;Учебный текст&lt;/script&gt;', body)
+                self.assertNotIn('<script>', body)
+                self.assertNotIn('untrusted-tag', body)

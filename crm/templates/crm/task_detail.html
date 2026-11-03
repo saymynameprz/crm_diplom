@@ -1,22 +1,24 @@
 {% extends "crm/base.html" %}
 {% block title %}Карточка задачи{% endblock %}
+{% block card_class %}detail-page{% endblock %}
 {% block content %}
-<h1>{{ task.title }}</h1>
+<header class="page-header"><div><h1>{{ task.title }}</h1><p>Статус: <span class="status status-{{ task.status }}">{{ task.get_status_display }}</span></p></div></header>
 {% if task.is_overdue %}<p class="overdue">Просрочена</p>{% endif %}
-{% if task.is_automatic %}<p>Автоматическая задача</p>{% endif %}
-<dl>
+{% if task.is_automatic %}<p class="muted">Автоматическая задача</p>{% endif %}
+<section class="record-section" aria-labelledby="task-details-title"><h2 id="task-details-title">Основные сведения</h2>
+<dl class="record-facts">
     <dt>Заявка</dt><dd><a href="{{ task.request.get_absolute_url }}">{{ task.request }}</a></dd>
     <dt>Ответственный</dt><dd>{{ task.assigned_to|default:"Не назначен" }}</dd>
-    <dt>Статус</dt><dd><span class="status status-{{ task.status }}">{{ task.get_status_display }}</span></dd>
     <dt>Описание</dt><dd>{{ task.description|default:"Не указано"|linebreaksbr }}</dd>
     <dt>Срок выполнения (UTC)</dt><dd>{{ task.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</dd>
     <dt>Дата завершения (UTC)</dt><dd>{{ task.completed_at|date:"d.m.Y H:i"|default:"Не указана" }}</dd>
     <dt>Создана (UTC)</dt><dd>{{ task.created_at|date:"d.m.Y H:i" }}</dd>
     <dt>Изменена (UTC)</dt><dd>{{ task.updated_at|date:"d.m.Y H:i" }}</dd>
 </dl>
-<div class="actions">
-    <a href="{% url 'task_update' task.pk %}">Редактировать</a>
-    {% if user.is_superuser %}<a href="{% url 'task_delete' task.pk %}">Удалить</a>{% endif %}
-    <a href="{% url 'task_list' %}">К списку задач</a>
+</section>
+<div class="actions record-actions">
+    <a class="button" href="{% url 'task_update' task.pk %}">Редактировать</a>
+    <a class="button button-secondary" href="{% url 'task_list' %}">К списку задач</a>
+    {% if user.is_superuser %}<a class="danger-link" href="{% url 'task_delete' task.pk %}">Удалить</a>{% endif %}
 </div>
 {% endblock %}

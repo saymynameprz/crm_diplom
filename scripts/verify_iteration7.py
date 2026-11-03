@@ -194,16 +194,18 @@ def main():
                     for width in (1440, 1280, 768, 375):
                         context = browser.new_context(viewport={'width': width, 'height': 1000})
                         page = context.new_page(); watch(page); login(page, 'history-manager')
-                        page.get_by_role('link', name='История', exact=True).click()
+                        if page.locator('.mobile-navigation').is_visible():
+                            page.locator('.mobile-navigation summary').click()
+                        page.locator('.navigation:visible').get_by_role('link', name='История взаимодействий', exact=True).click()
                         page.get_by_label(re.compile(r'^Поиск\ по\ теме\ или\ клиенту:?$')).fill('Факт')
                         page.get_by_label(re.compile(r'^Тип:?$')).select_option('call')
                         page.get_by_label(re.compile(r'^Клиент:?$')).select_option(str(client_id))
                         page.get_by_label(re.compile(r'^Порядок:?$')).select_option('oldest')
                         page.get_by_role('button', name='Применить', exact=True).click()
-                        assert page.get_by_role('list', name='Записи взаимодействий').locator('li').count() == 10
+                        assert page.get_by_role('table', name='Записи взаимодействий').locator('tbody tr').count() == 10
                         assert 'interaction_type=call' in page.get_by_role('link', name='Далее', exact=True).get_attribute('href')
                         page.get_by_role('link', name='Далее', exact=True).click()
-                        assert page.get_by_role('list', name='Записи взаимодействий').locator('li').count() == 2
+                        assert page.get_by_role('table', name='Записи взаимодействий').locator('tbody tr').count() == 2
                         screenshot(page, f'list-{width}.png')
                         page.goto(base+f'/clients/{client_id}/')
                         history = page.locator('section[aria-labelledby=client-history-title]')

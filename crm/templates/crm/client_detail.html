@@ -1,8 +1,11 @@
 {% extends "crm/base.html" %}
 {% block title %}Карточка клиента{% endblock %}
+{% block card_class %}detail-page{% endblock %}
 {% block content %}
-<h1>{{ client.full_name }}</h1>
-<dl>
+<header class="page-header"><div><h1>{{ client.full_name }}</h1><p class="muted">Карточка клиента</p></div></header>
+<section class="record-section" aria-labelledby="client-details-title">
+<h2 id="client-details-title">Контактные данные</h2>
+<dl class="record-facts">
     <dt>Телефон</dt><dd>{{ client.phone|default:"Не указан" }}</dd>
     <dt>Email</dt><dd>{{ client.email|default:"Не указан" }}</dd>
     <dt>Организация</dt><dd>{{ client.company|default:"Не указана" }}</dd>
@@ -10,26 +13,26 @@
     <dt>Создан</dt><dd>{{ client.created_at|date:"d.m.Y H:i" }}</dd>
     <dt>Изменён</dt><dd>{{ client.updated_at|date:"d.m.Y H:i" }}</dd>
 </dl>
-<div class="actions">
-    <a href="{% url 'client_update' client.pk %}">Редактировать</a>
-    {% if user.is_superuser %}<a href="{% url 'client_delete' client.pk %}">Удалить</a>{% endif %}
-    <a href="{% url 'client_list' %}">К списку</a>
-</div>
-<h2>Заявки клиента</h2>
+</section>
+<section class="record-section" aria-labelledby="client-requests-title">
+<h2 id="client-requests-title">Заявки клиента</h2>
 <ul class="client-list">
 {% for item in client_requests %}
-    <li><a href="{{ item.get_absolute_url }}">{{ item.title }}</a> — {{ item.get_status_display }}</li>
+    <li><a href="{{ item.get_absolute_url }}">{{ item.title }}</a> <span class="status status-{{ item.status }}">{{ item.get_status_display }}</span></li>
 {% empty %}
     <li>Нет доступных заявок клиента.</li>
 {% endfor %}
 </ul>
-<h2>Сделки клиента</h2>
+</section>
+<section class="record-section" aria-labelledby="client-deals-title">
+<h2 id="client-deals-title">Сделки клиента</h2>
 <ul class="client-list">
 {% for deal in client_deals %}
-    <li><a href="{{ deal.get_absolute_url }}">{{ deal.title }}</a> — {{ deal.amount|floatformat:"2" }} ₽ · {{ deal.get_stage_display }}</li>
+    <li><a href="{{ deal.get_absolute_url }}">{{ deal.title }}</a> — <span class="record-amount">{{ deal.amount|floatformat:"2" }} ₽</span> <span class="status stage-{{ deal.stage }}">{{ deal.get_stage_display }}</span></li>
 {% empty %}<li>Нет доступных сделок клиента.</li>{% endfor %}
 </ul>
-<section aria-labelledby="client-history-title">
+</section>
+<section class="record-section" aria-labelledby="client-history-title">
 <h2 id="client-history-title">История взаимодействий</h2>
 <p><a href="{% url 'interaction_create' %}?client={{ client.pk }}">Добавить взаимодействие</a></p>
 <ul class="client-list">
@@ -40,4 +43,9 @@
 </ul>
 {% if has_more_interactions %}<p><a href="{% url 'interaction_list' %}?client={{ client.pk }}">Вся история этого клиента</a></p>{% endif %}
 </section>
+<div class="actions record-actions">
+    <a class="button" href="{% url 'client_update' client.pk %}">Редактировать</a>
+    <a class="button button-secondary" href="{% url 'client_list' %}">К списку</a>
+    {% if user.is_superuser %}<a class="danger-link" href="{% url 'client_delete' client.pk %}">Удалить</a>{% endif %}
+</div>
 {% endblock %}

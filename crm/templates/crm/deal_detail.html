@@ -1,19 +1,21 @@
 {% extends "crm/base.html" %}
 {% block title %}Карточка сделки{% endblock %}
+{% block card_class %}detail-page{% endblock %}
 {% block content %}
-<h1>{{ deal.title }}</h1>
-<dl>
+<header class="page-header"><div><h1>{{ deal.title }}</h1><p>Этап: <span class="status stage-{{ deal.stage }}">{{ deal.get_stage_display }}</span></p></div></header>
+<section class="record-section" aria-labelledby="deal-details-title"><h2 id="deal-details-title">Основные сведения</h2>
+<dl class="record-facts">
 <dt>Клиент</dt><dd><a href="{{ deal.client.get_absolute_url }}">{{ deal.client }}</a></dd>
 <dt>Описание</dt><dd>{{ deal.description|default:"Не указано"|linebreaksbr }}</dd>
-<dt>Сумма</dt><dd>{{ deal.amount|floatformat:"2" }} ₽</dd>
-<dt>Этап</dt><dd><span class="status stage-{{ deal.stage }}">{{ deal.get_stage_display }}</span></dd>
+<dt>Сумма</dt><dd><span class="record-amount">{{ deal.amount|floatformat:"2" }} ₽</span></dd>
 <dt>Ответственный</dt><dd>{{ deal.assigned_to|default:"Не назначен" }}</dd>
 <dt>Планируемая дата закрытия</dt><dd>{{ deal.expected_close_date|date:"d.m.Y"|default:"Не указана" }}</dd>
 <dt>Создана (UTC)</dt><dd>{{ deal.created_at|date:"d.m.Y H:i" }}</dd>
 <dt>Изменена (UTC)</dt><dd>{{ deal.updated_at|date:"d.m.Y H:i" }}</dd>
 </dl>
-<div class="actions"><a href="{% url 'deal_update' deal.pk %}">Редактировать</a>
-{% if user.is_superuser %}<a href="{% url 'deal_delete' deal.pk %}">Удалить</a>{% endif %}
-<a href="{% url 'deal_list' %}">К списку сделок</a>
-<a href="{% url 'deal_kanban' %}">Воронка продаж</a></div>
+</section>
+<div class="actions record-actions"><a class="button" href="{% url 'deal_update' deal.pk %}">Редактировать</a>
+<a class="button button-secondary" href="{% url 'deal_list' %}">К списку сделок</a>
+<a href="{% url 'deal_kanban' %}">Воронка продаж</a>
+{% if user.is_superuser %}<a class="danger-link" href="{% url 'deal_delete' deal.pk %}">Удалить</a>{% endif %}</div>
 {% endblock %}

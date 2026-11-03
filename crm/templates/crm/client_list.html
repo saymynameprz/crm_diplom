@@ -1,9 +1,10 @@
 {% extends "crm/base.html" %}
 {% block title %}Клиенты{% endblock %}
-{% block card_class %}wide{% endblock %}
+{% block card_class %}wide records-page{% endblock %}
 {% block content %}
-<h1>Клиенты</h1>
-<p><a class="button" href="{% url 'client_create' %}">Добавить клиента</a></p>
+<header class="page-header"><div><h1>Клиенты</h1><p class="muted">Общая клиентская база</p></div>
+    <a class="button" href="{% url 'client_create' %}">Добавить клиента</a>
+</header>
 <form method="get" class="filters">
     <div><label for="q">Поиск</label><input type="search" id="q" name="q" value="{{ query }}" placeholder="Имя, телефон, email, организация"></div>
     <div><label for="company">Организация</label><select id="company" name="company">
@@ -15,24 +16,25 @@
         <option value="newest">Сначала новые</option>
         <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
     </select></div>
-    <div class="actions"><button type="submit">Найти</button><a href="{% url 'client_list' %}">Сбросить</a></div>
+    <div class="actions filter-actions"><button type="submit">Найти</button><a href="{% url 'client_list' %}">Сбросить</a></div>
 </form>
-<ul class="client-list">
+{% if clients %}
+<p class="table-help">Все столбцы доступны при горизонтальной прокрутке таблицы, в том числе клавишами ← и →.</p>
+<div class="table-region" role="region" aria-label="Таблица клиентов" tabindex="0">
+<table class="data-table">
+<caption class="visually-hidden">Клиенты</caption>
+<thead><tr><th scope="col">Клиент</th><th scope="col">Организация</th><th scope="col">Контакты</th><th scope="col">Создан (UTC)</th></tr></thead>
+<tbody>
 {% for client in clients %}
-    <li><h2><a href="{{ client.get_absolute_url }}">{{ client.full_name }}</a></h2>
-        <p>{{ client.company|default:"Без организации" }} · {{ client.phone|default:"Телефон не указан" }}</p>
-        <p>{{ client.email|default:"Email не указан" }}</p>
-        <small>Создан: {{ client.created_at|date:"d.m.Y H:i" }}</small>
-    </li>
-{% empty %}
-    <li>{% if query or company_filter %}Клиенты не найдены. Измените условия поиска.{% else %}Клиентов пока нет. Добавьте первого клиента.{% endif %}</li>
+    <tr><td><a class="record-link" href="{{ client.get_absolute_url }}">{{ client.full_name }}</a></td>
+        <td class="record-cell">{{ client.company|default:"Без организации" }}</td>
+        <td class="record-cell"><span class="record-line">{{ client.phone|default:"Телефон не указан" }}</span><span class="record-line muted">{{ client.email|default:"Email не указан" }}</span></td>
+        <td class="record-date">{{ client.created_at|date:"d.m.Y H:i" }}</td>
+    </tr>
 {% endfor %}
-</ul>
-{% if is_paginated %}
-<nav class="pagination" aria-label="Страницы клиентов">
-    {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
-    <span>Страница {{ page_obj.number }} из {{ paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
-</nav>
+</tbody></table></div>
+{% else %}
+<div class="empty-state">{% if query or company_filter %}Клиенты не найдены. Измените условия поиска.{% else %}Клиентов пока нет. Добавьте первого клиента.{% endif %}</div>
 {% endif %}
+{% include "crm/_pagination.html" with page_label="Страницы клиентов" %}
 {% endblock %}

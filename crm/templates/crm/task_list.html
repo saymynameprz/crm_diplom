@@ -1,50 +1,46 @@
 {% extends "crm/base.html" %}
 {% block title %}Задачи{% endblock %}
-{% block card_class %}wide{% endblock %}
+{% block card_class %}wide records-page{% endblock %}
 {% block content %}
-<h1>Задачи</h1>
-<p><a class="button" href="{% url 'task_create' %}">Добавить задачу</a></p>
+<header class="page-header"><div><h1>Задачи</h1><p class="muted">{% if user.is_superuser %}Все доступные задачи{% else %}Мои задачи доступных заявок{% endif %}</p></div><a class="button" href="{% url 'task_create' %}">Добавить задачу</a></header>
 <form method="get" class="filters">
-    <label for="q">Поиск по названию</label><input type="search" id="q" name="q" value="{{ query }}">
-    <label for="status">Статус</label><select id="status" name="status">
+    <div><label for="q">Поиск по названию</label><input type="search" id="q" name="q" value="{{ query }}"></div>
+    <div><label for="status">Статус</label><select id="status" name="status">
         <option value="">Все статусы</option>
         {% for value, label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-    </select>
-    <label for="overdue">Просрочка</label><select id="overdue" name="overdue">
+    </select></div>
+    <div><label for="overdue">Просрочка</label><select id="overdue" name="overdue">
         <option value="">Все записи</option>
         <option value="yes" {% if overdue_filter == 'yes' %}selected{% endif %}>Просроченные</option>
         <option value="no" {% if overdue_filter == 'no' %}selected{% endif %}>Непросроченные</option>
-    </select>
-    <label for="sort">Дата создания</label><select id="sort" name="sort">
+    </select></div>
+    <div><label for="sort">Дата создания</label><select id="sort" name="sort">
         <option value="newest">Сначала новые</option>
         <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
-    </select>
-    <div class="actions"><button type="submit">Найти</button><a href="{% url 'task_list' %}">Сбросить</a></div>
+    </select></div>
+    <div class="actions filter-actions"><button type="submit">Найти</button><a href="{% url 'task_list' %}">Сбросить</a></div>
 </form>
-<div class="request-table">
-<table>
+{% if tasks %}
+<p class="table-help">Все столбцы доступны при горизонтальной прокрутке таблицы, в том числе клавишами ← и →.</p>
+<div class="table-region" role="region" aria-label="Таблица задач" tabindex="0">
+<table class="data-table">
     <caption class="visually-hidden">Доступные задачи</caption>
-    <thead><tr><th>Задача</th><th>Заявка</th><th>Ответственный</th><th>Статус</th><th>Срок (UTC)</th></tr></thead>
+    <thead><tr><th scope="col">Задача</th><th scope="col">Заявка</th><th scope="col">Ответственный</th><th scope="col">Статус</th><th scope="col">Срок (UTC)</th></tr></thead>
     <tbody>
     {% for task in tasks %}
         <tr>
             <td data-label="Задача"><a href="{{ task.get_absolute_url }}">{{ task.title }}</a>{% if task.is_automatic %}<small> · Автоматическая</small>{% endif %}</td>
-            <td data-label="Заявка"><a href="{{ task.request.get_absolute_url }}">{{ task.request }}</a></td>
+            <td class="record-cell" data-label="Заявка"><a href="{{ task.request.get_absolute_url }}">{{ task.request }}</a></td>
             <td data-label="Ответственный">{{ task.assigned_to|default:"Не назначен" }}</td>
             <td data-label="Статус"><span class="status status-{{ task.status }}">{{ task.get_status_display }}</span>{% if task.overdue_flag %} <span class="overdue">Просрочена</span>{% endif %}</td>
-            <td data-label="Срок (UTC)">{{ task.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</td>
+            <td class="record-date" data-label="Срок (UTC)">{{ task.due_at|date:"d.m.Y H:i"|default:"Не указан" }}</td>
         </tr>
-    {% empty %}
-        <tr><td colspan="5">{% if query or status_filter %}Задачи не найдены.{% else %}Доступных задач пока нет.{% endif %}</td></tr>
     {% endfor %}
     </tbody>
 </table>
 </div>
-{% if is_paginated %}
-<nav class="pagination" aria-label="Страницы задач">
-    {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
-    <span>Страница {{ page_obj.number }} из {{ paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
-</nav>
+{% else %}
+<div class="empty-state">{% if query or status_filter or overdue_filter %}Задачи не найдены.{% else %}Доступных задач пока нет.{% endif %}</div>
 {% endif %}
+{% include "crm/_pagination.html" with page_label="Страницы задач" %}
 {% endblock %}

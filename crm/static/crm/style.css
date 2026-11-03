@@ -254,7 +254,72 @@ button:disabled { background: var(--color-surface-raised); color: var(--color-te
 .message-error { background: var(--color-error-bg); color: var(--color-error-text); }
 .message a { color: inherit; }
 .delete-panel .message { margin-bottom: 0; }
+.system-messages { margin-bottom: var(--space-5); }
+.message .notice { margin: var(--space-2) 0 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; }
+.message + .message { margin-top: var(--space-3); }
 @media (max-width: 600px) {
     .form-layout { gap: var(--space-4); }
     .form-actions { padding-top: var(--space-4); }
+}
+
+/* Lists and record details share components; specialized screens keep their layouts. */
+.muted, .table-help { color: var(--color-text-muted); }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-5); }
+.page-header > :first-child { min-width: 0; flex: 1 1 18rem; }
+.page-header h1 { margin: 0; }
+.page-header p { margin: var(--space-2) 0 0; }
+.page-header .actions { margin-top: 0; justify-content: flex-end; }
+.page-header .button, .record-actions .button { display: inline-flex; align-items: center; justify-content: center; max-width: 100%; border-radius: var(--radius-md); font-weight: 600; text-align: center; overflow-wrap: anywhere; }
+.records-page .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); align-items: end; gap: var(--space-4); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-raised); }
+.records-page .filters > div { min-width: 0; }
+.records-page .filters label { margin: 0 0 var(--space-2); font-size: var(--font-size-small); }
+.records-page .filters input, .records-page .filters select { background: var(--color-surface); border-radius: var(--radius-sm); }
+.records-page .filters .errorlist { margin: var(--space-2) 0 0; font-size: var(--font-size-small); }
+.records-page .filter-actions { margin: 0; gap: var(--space-3); }
+.records-page .filter-actions button { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); }
+.table-help { margin: var(--space-4) 0 var(--space-2); font-size: var(--font-size-small); }
+.table-region { max-width: 100%; overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.data-table { width: 100%; min-width: 52rem; table-layout: auto; border-collapse: collapse; }
+.table-region-wide .data-table { min-width: 64rem; }
+.data-table caption { text-align: left; }
+.data-table th, .data-table td { padding: var(--space-3); text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
+.data-table th { min-width: 8rem; background: var(--color-surface-raised); color: var(--color-text-muted); font-size: var(--font-size-small); font-weight: 600; }
+.data-table th:first-child { min-width: 16rem; }
+.data-table .record-cell { min-width: 14rem; }
+.table-region-wide .data-table th:first-child { min-width: 14rem; }
+.table-region-wide .record-cell { min-width: 12rem; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table tbody tr:hover, .data-table tbody tr:focus-within { background: var(--color-surface-hover); }
+.data-table a { color: var(--color-info-text); text-underline-offset: .2em; }
+.record-link, .data-table td:first-child > a { font-weight: 600; }
+.record-line { display: block; }
+.record-date, .record-amount { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.data-table .record-amount { text-align: right; }
+.data-table .status, .data-table .overdue { margin: var(--space-1) 0; }
+.records-page .status, .detail-page .status { padding: var(--space-1) var(--space-2); font-size: var(--font-size-small); }
+.interaction-type { background: var(--color-contact-bg); color: var(--color-contact-text); }
+.records-page .empty-state { margin-top: var(--space-5); padding: var(--space-5); border: 1px dashed var(--color-control-border); border-radius: var(--radius-md); color: var(--color-text-muted); overflow-wrap: anywhere; }
+.records-page .pagination { gap: var(--space-2); margin-top: var(--space-5); }
+.records-page .pagination > * { display: inline-flex; align-items: center; justify-content: center; min-height: var(--size-control); max-width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-control-border); border-radius: var(--radius-sm); }
+.records-page .pagination a { color: var(--color-text); text-decoration: none; }
+.records-page .pagination a:hover { background: var(--color-surface-hover); }
+.records-page .pagination [aria-current] { border-color: var(--color-border); font-weight: 600; }
+.records-page .pagination .pagination-disabled { color: var(--color-text-muted); border-color: var(--color-border); }
+.detail-page { max-width: 60rem; margin-left: 0; }
+.record-section { min-width: 0; padding: var(--space-5); margin-top: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.record-section h2 { margin: 0 0 var(--space-4); font-size: 1.25rem; overflow-wrap: anywhere; }
+.record-facts { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 3fr); gap: var(--space-4); margin: 0; }
+.record-facts dt, .record-facts dd { margin: 0; overflow-wrap: anywhere; }
+.record-section .client-list { margin: 0; }
+.record-section .client-list li:first-child { padding-top: 0; }
+.record-section .client-list li:last-child { padding-bottom: 0; border-bottom: 0; }
+.record-actions { gap: var(--space-3); margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+.danger-link { color: var(--color-error-text); text-underline-offset: .2em; }
+.danger-link:hover { color: var(--color-text); }
+@media (max-width: 600px) {
+    .records-page .filters { grid-template-columns: minmax(0, 1fr); }
+    .page-header .actions { justify-content: flex-start; }
+    .record-section { padding: var(--space-4); }
+    .record-facts { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+    .record-facts dd:not(:last-child) { margin-bottom: var(--space-4); }
 }

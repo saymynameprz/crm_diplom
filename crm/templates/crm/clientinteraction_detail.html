@@ -1,19 +1,21 @@
 {% extends "crm/base.html" %}
 {% block title %}Взаимодействие с клиентом{% endblock %}
+{% block card_class %}detail-page{% endblock %}
 {% block content %}
-<h1>{{ interaction.subject }}</h1>
-<dl>
+<header class="page-header"><div><h1>{{ interaction.subject }}</h1><p><span class="status interaction-type">{{ interaction.get_interaction_type_display }}</span></p></div></header>
+<section class="record-section" aria-labelledby="interaction-details-title"><h2 id="interaction-details-title">Сведения о событии</h2>
+<dl class="record-facts">
     <dt>Клиент</dt><dd><a href="{{ interaction.client.get_absolute_url }}">{{ interaction.client }}</a></dd>
-    <dt>Тип</dt><dd>{{ interaction.get_interaction_type_display }}</dd>
     <dt>Время взаимодействия</dt><dd><time datetime="{{ interaction.occurred_at|date:'c' }}">{{ interaction.occurred_at|date:"d.m.Y H:i" }} UTC</time></dd>
     <dt>Автор</dt><dd>{{ interaction.created_by }}</dd>
     <dt>Описание</dt><dd>{{ interaction.description|default:"Нет описания"|linebreaksbr }}</dd>
     <dt>Создано</dt><dd>{{ interaction.created_at|date:"d.m.Y H:i" }} UTC</dd>
     <dt>Изменено</dt><dd>{{ interaction.updated_at|date:"d.m.Y H:i" }} UTC</dd>
 </dl>
-<div class="actions">
-    <a href="{% url 'interaction_update' interaction.pk %}">Редактировать</a>
-    {% if user.is_superuser %}<a href="{% url 'interaction_delete' interaction.pk %}">Удалить</a>{% endif %}
-    <a href="{% url 'interaction_list' %}">К истории</a>
+</section>
+<div class="actions record-actions">
+    <a class="button" href="{% url 'interaction_update' interaction.pk %}">Редактировать</a>
+    <a class="button button-secondary" href="{% url 'interaction_list' %}">К истории</a>
+    {% if user.is_superuser %}<a class="danger-link" href="{% url 'interaction_delete' interaction.pk %}">Удалить</a>{% endif %}
 </div>
 {% endblock %}
