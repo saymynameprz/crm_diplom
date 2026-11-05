@@ -1,0 +1,217 @@
+phase,viewport,page,text,x,y,width,height,padding,margin,font,line,weight,display,textX,active,gap
+before,1920,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+before,1920,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,home,История взаимодействий,12,523,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,home,Аналитика,12,591,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,home,Оптимизация заявок,12,684,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,kanban,Главная,12,100,215,44,8px 12px,0px,16px,24px,400,flex,27,,
+before,1920,kanban,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,kanban,Заявки,12,241,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,kanban,Задачи,12,289,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,kanban,Сделки,12,382,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,kanban,Kanban,12,430,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+before,1920,kanban,История взаимодействий,12,523,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1920,kanban,Аналитика,12,591,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1920,kanban,Оптимизация заявок,12,684,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+before,1440,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,home,История взаимодействий,12,523,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,home,Аналитика,12,591,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,home,Оптимизация заявок,12,684,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,kanban,Главная,12,374,215,44,8px 12px,0px,16px,24px,400,flex,27,,
+before,1440,kanban,Клиенты,12,467,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,kanban,Заявки,12,515,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,kanban,Задачи,12,563,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,kanban,Сделки,12,656,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,kanban,Kanban,12,704,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+before,1440,kanban,История взаимодействий,12,797,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1440,kanban,Аналитика,12,865,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1440,kanban,Оптимизация заявок,12,958,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+before,1280,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,home,История взаимодействий,12,523,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,home,Аналитика,12,591,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,home,Оптимизация заявок,12,684,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,kanban,Главная,12,374,215,44,8px 12px,0px,16px,24px,400,flex,27,,
+before,1280,kanban,Клиенты,12,467,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,kanban,Заявки,12,515,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,kanban,Задачи,12,563,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,kanban,Сделки,12,656,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,kanban,Kanban,12,704,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+before,1280,kanban,История взаимодействий,12,797,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1280,kanban,Аналитика,12,865,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1280,kanban,Оптимизация заявок,12,958,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+before,1024,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,home,История взаимодействий,12,523,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,home,Аналитика,12,591,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,home,Оптимизация заявок,12,684,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,kanban,Главная,12,399,215,44,8px 12px,0px,16px,24px,400,flex,27,,
+before,1024,kanban,Клиенты,12,492,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,kanban,Заявки,12,540,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,kanban,Задачи,12,588,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,kanban,Сделки,12,681,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,kanban,Kanban,12,729,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+before,1024,kanban,История взаимодействий,12,822,215,64,8px 12px,0px,16px,24px,400,flex,27,,8
+before,1024,kanban,Аналитика,12,890,215,44,8px 12px,0px,16px,24px,400,flex,27,,4
+before,1024,kanban,Оптимизация заявок,12,983,215,44,8px 12px,0px,16px,24px,400,flex,27,,8
+before,768,home,Главная,16,146,736,44,8px 12px,0px,16px,24px,600,flex,31,page,
+before,768,home,Клиенты,16,239,736,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,768,home,Заявки,16,287,736,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,768,home,Задачи,16,335,736,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,768,home,Сделки,16,428,736,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,768,home,Kanban,16,476,736,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,768,home,История взаимодействий,16,569,736,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,768,home,Аналитика,16,617,736,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,768,home,Оптимизация заявок,16,710,736,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,600,home,Главная,16,207,568,44,8px 12px,0px,16px,24px,600,flex,31,page,
+before,600,home,Клиенты,16,300,568,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,600,home,Заявки,16,348,568,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,600,home,Задачи,16,396,568,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,600,home,Сделки,16,489,568,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,600,home,Kanban,16,537,568,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,600,home,История взаимодействий,16,630,568,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,600,home,Аналитика,16,678,568,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,600,home,Оптимизация заявок,16,771,568,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,375,home,Главная,16,207,343,44,8px 12px,0px,16px,24px,600,flex,31,page,
+before,375,home,Клиенты,16,300,343,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,375,home,Заявки,16,348,343,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,375,home,Задачи,16,396,343,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,375,home,Сделки,16,489,343,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,375,home,Kanban,16,537,343,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,375,home,История взаимодействий,16,630,343,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,375,home,Аналитика,16,678,343,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,375,home,Оптимизация заявок,16,771,343,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,320,home,Главная,16,207,288,44,8px 12px,0px,16px,24px,600,flex,31,page,
+before,320,home,Клиенты,16,300,288,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,320,home,Заявки,16,348,288,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,320,home,Задачи,16,396,288,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,320,home,Сделки,16,489,288,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,320,home,Kanban,16,537,288,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,320,home,История взаимодействий,16,630,288,44,8px 12px,0px,16px,24px,400,flex,31,,8
+before,320,home,Аналитика,16,678,288,44,8px 12px,0px,16px,24px,400,flex,31,,4
+before,320,home,Оптимизация заявок,16,771,288,44,8px 12px,0px,16px,24px,400,flex,31,,8
+after,1920,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+after,1920,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,home,Взаимодействия,12,523,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,home,Аналитика,12,571,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,home,Оптимизация,12,664,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,kanban,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,,
+after,1920,kanban,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,kanban,Заявки,12,241,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,kanban,Задачи,12,289,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,kanban,Сделки,12,382,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,kanban,Kanban,12,430,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+after,1920,kanban,Взаимодействия,12,523,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1920,kanban,Аналитика,12,571,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1920,kanban,Оптимизация,12,664,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+after,1440,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,home,Взаимодействия,12,523,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,home,Аналитика,12,571,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,home,Оптимизация,12,664,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,kanban,Главная,12,376,215,44,8px 12px,0px,16px,24px,600,flex,27,,
+after,1440,kanban,Клиенты,12,469,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,kanban,Заявки,12,517,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,kanban,Задачи,12,565,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,kanban,Сделки,12,658,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,kanban,Kanban,12,706,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+after,1440,kanban,Взаимодействия,12,799,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1440,kanban,Аналитика,12,847,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1440,kanban,Оптимизация,12,940,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+after,1280,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,home,Взаимодействия,12,523,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,home,Аналитика,12,571,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,home,Оптимизация,12,664,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,kanban,Главная,12,376,215,44,8px 12px,0px,16px,24px,600,flex,27,,
+after,1280,kanban,Клиенты,12,469,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,kanban,Заявки,12,517,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,kanban,Задачи,12,565,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,kanban,Сделки,12,658,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,kanban,Kanban,12,706,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+after,1280,kanban,Взаимодействия,12,799,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1280,kanban,Аналитика,12,847,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1280,kanban,Оптимизация,12,940,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,home,Главная,12,100,215,44,8px 12px,0px,16px,24px,600,flex,27,page,
+after,1024,home,Клиенты,12,193,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,home,Заявки,12,241,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,home,Задачи,12,289,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,home,Сделки,12,382,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,home,Kanban,12,430,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,home,Взаимодействия,12,523,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,home,Аналитика,12,571,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,home,Оптимизация,12,664,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,kanban,Главная,12,401,215,44,8px 12px,0px,16px,24px,600,flex,27,,
+after,1024,kanban,Клиенты,12,494,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,kanban,Заявки,12,542,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,kanban,Задачи,12,590,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,kanban,Сделки,12,683,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,kanban,Kanban,12,731,215,44,8px 12px,0px,16px,24px,600,flex,27,page,4
+after,1024,kanban,Взаимодействия,12,824,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,1024,kanban,Аналитика,12,872,215,44,8px 12px,0px,16px,24px,600,flex,27,,4
+after,1024,kanban,Оптимизация,12,965,215,44,8px 12px,0px,16px,24px,600,flex,27,,8
+after,768,home,Главная,16,147.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,page,
+after,768,home,Клиенты,16,240.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,768,home,Заявки,16,288.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,768,home,Задачи,16,336.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,768,home,Сделки,16,429.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,768,home,Kanban,16,477.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,768,home,Взаимодействия,16,570.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,768,home,Аналитика,16,618.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,768,home,Оптимизация,16,711.78125,736,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,600,home,Главная,16,208.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,page,
+after,600,home,Клиенты,16,301.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,600,home,Заявки,16,349.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,600,home,Задачи,16,397.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,600,home,Сделки,16,490.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,600,home,Kanban,16,538.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,600,home,Взаимодействия,16,631.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,600,home,Аналитика,16,679.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,600,home,Оптимизация,16,772.78125,568,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,375,home,Главная,16,208.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,page,
+after,375,home,Клиенты,16,301.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,375,home,Заявки,16,349.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,375,home,Задачи,16,397.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,375,home,Сделки,16,490.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,375,home,Kanban,16,538.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,375,home,Взаимодействия,16,631.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,375,home,Аналитика,16,679.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,375,home,Оптимизация,16,772.78125,343,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,320,home,Главная,16,208.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,page,
+after,320,home,Клиенты,16,301.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,320,home,Заявки,16,349.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,320,home,Задачи,16,397.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,320,home,Сделки,16,490.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,320,home,Kanban,16,538.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,320,home,Взаимодействия,16,631.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,8
+after,320,home,Аналитика,16,679.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,4
+after,320,home,Оптимизация,16,772.78125,288,44,8px 12px,0px,16px,24px,600,flex,31,,8
