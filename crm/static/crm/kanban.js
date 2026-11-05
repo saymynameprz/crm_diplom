@@ -13,6 +13,9 @@
         feedback.hidden = false;
         status.textContent = message;
         refresh.hidden = !needsRefresh;
+        // Keep in-flow feedback visible on tall boards without covering controls or moving focus.
+        const bounds = feedback.getBoundingClientRect();
+        if (bounds.top < 0 || bounds.bottom > window.innerHeight) feedback.scrollIntoView({block: "nearest"});
     }
     function enhance() {
         board.querySelectorAll(".kanban-deal").forEach(card => {

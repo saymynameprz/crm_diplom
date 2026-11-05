@@ -277,3 +277,21 @@ class KanbanPresentationTests(TestCase):
         self.assertContains(response, 'Карточка устарела', status_code=409)
         self.assertNotContains(response, 'Сделка перемещена', status_code=409)
         self.assertContains(response, 'class="button" href="/deals/kanban/">Обновить доску', status_code=409)
+
+
+class KanbanFullStageLabelTests(TestCase):
+    def test_full_current_stage_is_present_initially_and_in_updated_fragment(self):
+        manager = User.objects.create_user('stage-label-manager')
+        contact = Client.objects.create(full_name='Учебный клиент метки')
+        deal = Deal.objects.create(client=contact, title='Учебная сделка без даты', assigned_to=manager, amount=Decimal('1.00'), stage='proposal')
+        self.client.force_login(manager)
+        page = self.client.get(reverse('deal_kanban'))
+        self.assertContains(page, 'Текущий этап: <strong>Коммерческое предложение</strong>')
+        self.assertNotContains(page, 'Планируемая дата закрытия')
+        response = self.client.post(reverse('deal_change_stage', args=[deal.pk]),
+            {'stage': 'won', 'expected_updated_at': deal.updated_at.isoformat()}, HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 200)
+        target = next(c for c in response.json()['columns'] if c['stage'] == 'won')
+        self.assertIn('Текущий этап: <strong>Успешно завершена</strong>', target['html'])
+        self.assertIn('name="expected_updated_at"', target['html'])
+        self.assertIn('name="stage"', target['html'])

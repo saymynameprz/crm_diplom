@@ -735,3 +735,25 @@ class RecordComponentsTests(TestCase):
                 self.assertIn('&lt;script&gt;Учебный текст&lt;/script&gt;', body)
                 self.assertNotIn('<script>', body)
                 self.assertNotIn('untrusted-tag', body)
+
+
+class NavigationRefinementTests(TestCase):
+    def test_short_visible_labels_keep_full_accessible_names_and_nested_active_routes(self):
+        admin = User.objects.create_user('navigation-polish-admin', is_superuser=True)
+        manager = User.objects.create_user('navigation-polish-manager')
+        for actor in (admin, manager):
+            self.client.force_login(actor)
+            for url in ('/interactions/', '/interactions/create/', '/deals/', '/deals/kanban/'):
+                page = self.client.get(url)
+                self.assertEqual(page.status_code, 200)
+                self.assertContains(page, '>Продажи</span>', count=2)
+                self.assertContains(page, 'aria-label="История взаимодействий"', count=2)
+                self.assertContains(page, '>Взаимодействия</a>', count=2)
+                markup = ShellMarkup(page.content.decode())
+                self.assertEqual(markup.errors, [])
+                for nav in markup.navs:
+                    selected = [a for a in nav if a.get('aria-current')]
+                    self.assertEqual(len(selected), 1)
+                    self.assertEqual(selected[0]['href'], '/interactions/' if url.startswith('/interactions/') else url)
+                    self.assertEqual(selected[0]['aria-current'], 'location' if url.endswith('create/') else 'page')
+                self.assertEqual('/optimization/' in [a['href'] for a in markup.navs[0]], actor.is_superuser)

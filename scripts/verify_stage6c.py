@@ -288,6 +288,7 @@ with tempfile.TemporaryDirectory(prefix='crm-kanban-validation-') as directory:
                     drag('proposal')
                     page.wait_for_selector('.kanban-scroll[aria-busy=true]')
                     assert 'Сохраняем' in page.locator('#kanban-status').inner_text()
+                    assert page.locator('#kanban-feedback').evaluate('e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}'), 'Saving feedback must remain visible on a tall board'
                     assert card().get_attribute('class').find('is-saving')>=0
                     # A second drop while busy has no active drag and must not issue another request.
                     transfer=page.evaluate_handle('new DataTransfer()')

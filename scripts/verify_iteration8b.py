@@ -245,8 +245,22 @@ def main():
                         card=fresh.locator(f'[data-deal-id="{deal_id}"]');card.locator('select').select_option('contact')
                         with fresh.expect_navigation():card.locator('button').click()
                         fresh.close();card=page.locator(f'[data-deal-id="{deal_id}"]')
+                        def drag_to_stage(stage):
+                            source = card.locator('.kanban-drag-handle')
+                            source.scroll_into_view_if_needed()
+                            target = page.locator(f'[data-stage={stage}] h2')
+                            visible = target.evaluate('e=>{const a=e.getBoundingClientRect(),b=e.closest(".kanban-scroll").getBoundingClientRect();return a.left+a.width/2>=b.left&&a.left+a.width/2<=b.right&&a.top+a.height/2>=0&&a.top+a.height/2<=innerHeight;}')
+                            if visible:
+                                source.drag_to(target)
+                            else:
+                                transfer = page.evaluate_handle('new DataTransfer()')
+                                source.dispatch_event('dragstart', {'dataTransfer': transfer})
+                                target.scroll_into_view_if_needed()
+                                target.dispatch_event('dragover', {'dataTransfer': transfer})
+                                target.dispatch_event('drop', {'dataTransfer': transfer})
+                                source.dispatch_event('dragend', {'dataTransfer': transfer})
                         if javascript:
-                            with page.expect_response(lambda r:r.url.endswith('/change-stage/') and r.status==409):card.locator('.kanban-drag-handle').drag_to(page.locator('[data-stage=contact] h2'))
+                            with page.expect_response(lambda r:r.url.endswith('/change-stage/') and r.status==409):drag_to_stage('contact')
                             page.wait_for_function("document.querySelector('#kanban-status').textContent.includes('изменена после')")
                         else:
                             card.locator('select').select_option('contact')
@@ -255,7 +269,7 @@ def main():
                         page.get_by_role('link',name='Обновить доску',exact=True).click()
                         card=page.locator(f'[data-deal-id="{deal_id}"]')
                         if javascript:
-                            with page.expect_response(lambda r:r.url.endswith('/change-stage/') and r.status==200):card.locator('.kanban-drag-handle').drag_to(page.locator('[data-stage=new] h2'))
+                            with page.expect_response(lambda r:r.url.endswith('/change-stage/') and r.status==200):drag_to_stage('new')
                             page.wait_for_function("!document.querySelector('.kanban-scroll').hasAttribute('aria-busy')")
                         else:
                             card.locator('select').select_option('new')
