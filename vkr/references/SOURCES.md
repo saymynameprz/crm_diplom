@@ -31,3 +31,36 @@
 ## Ожидает проверки актуальности
 
 [Страница образовательной программы](https://smolgu.ru/sveden/education/programs/matematicheskoe-i-informacionnoe-modelirovanie-nachalo-obucheniya-2023-01.03.02.html) ранее возвращала 403 CONNECT от прокси среды. Наличие более новой редакции и применимость к году защиты не установлены. Получение вложения снимает блокер чтения документа, но не подтверждает текущее содержимое сайта.
+
+## Официальные материалы по CRM, проверенные на ВКР-3.2
+
+Дата проверки: 16.11.2026. Веб-справка по исходным адресам недоступна (403). Самостоятельно прочитаны доступные официальные публикации в GitHub; зафиксированы точные коммиты. Проверка подтверждает содержание документов/SDK, а не испытание продуктов, всех тарифов или интерфейсов. Даты публикации отдельных страниц не устанавливались.
+
+| ID | Продукт / организация | Название и URL | Проверенная часть и назначение | Ограничение |
+|---|---|---|---|---|
+| К-01 | Битрикс24 / bitrix24 | [Documentation for the Bitrix24 REST API](https://github.com/bitrix24/b24restdocs/blob/30861a483028571723cd0476259eb36435105c20/README.md) | Происхождение репозитория: официальный исходник онлайн-документации REST | Не подтверждает отдельные функции одной общей характеристикой |
+| К-02 | Битрикс24 / bitrix24 | [Contacts in CRM: Overview of Methods](https://github.com/bitrix24/b24restdocs/blob/30861a483028571723cd0476259eb36435105c20/api-reference/crm/contacts/index.md) | Контакты, клиентские данные, связи с другими CRM-объектами | Переход к универсальным методам отмечен в самой документации |
+| К-03 | Битрикс24 / bitrix24 | [Deals in CRM: Overview of Methods](https://github.com/bitrix24/b24restdocs/blob/30861a483028571723cd0476259eb36435105c20/api-reference/crm/deals/index.md) | Сделки, этапы, клиенты, назначенный ответственный и изменение через API | Не доказывает наличие конкретного оптимизатора |
+| К-04 | Битрикс24 / bitrix24 | [Tasks: method overview](https://github.com/bitrix24/b24restdocs/blob/30861a483028571723cd0476259eb36435105c20/api-reference/tasks/index.md) | Задачи, участники, сроки, история, учёт времени | Не подменяет проверку конкретного тарифа |
+| К-05 | Битрикс24 / bitrix24 | [Application Automation Rules: Overview of Methods](https://github.com/bitrix24/b24restdocs/blob/30861a483028571723cd0476259eb36435105c20/api-reference/bizproc/bizproc-robot/index.md) | Вызов внешнего обработчика в автоматизации, возврат вычисленных данных | Робот приложения не тождествен алгоритму распределения стороннего приложения |
+| К-06 | Битрикс24 / bitrix24 | [Sales Intelligence in CRM: Common Scenarios](https://github.com/bitrix24/b24restdocs/blob/30861a483028571723cd0476259eb36435105c20/tutorials/crm/how-to-use-analitycs/index.md) | Связь CRM-объектов с источником обращения и аналитическим следом | Не подтверждает все доступные аналитические отчёты |
+| К-07 | amoCRM / amocrm | [amoCRM API Library](https://github.com/amocrm/amocrm-api-php/blob/a0072fec651b84500c6767f98bbab6d1c8df9ce4/README.md) | Разделы «Поддерживаемые методы и сервисы», «Методы связей», webhooks/widgets: контакты, компании, сделки, задачи, воронки, статусы и расширение | Официальный SDK; не справка о тарифах, встроенной Digital Pipeline или полном составе аналитики |
+| К-08 | amoCRM / amocrm | [LeadModel](https://github.com/amocrm/amocrm-api-php/blob/a0072fec651b84500c6767f98bbab6d1c8df9ce4/src/AmoCRM/Models/LeadModel.php) | Ответственный, этап и воронка сделки | Официальный SDK; не справка о тарифах, встроенной Digital Pipeline или полном составе аналитики |
+| К-09 | amoCRM / amocrm | [TaskModel](https://github.com/amocrm/amocrm-api-php/blob/a0072fec651b84500c6767f98bbab6d1c8df9ce4/src/AmoCRM/Models/TaskModel.php) | Ответственный, срок и признак завершения задачи | Официальный SDK; не справка о тарифах, встроенной Digital Pipeline или полном составе аналитики |
+
+### Предварительная внешняя проверка и недоступные адреса
+
+Пользователь сообщил результаты внешнего веб-поиска: Битрикс24 — автоматизация продаж, роботы/триггеры и **отдельные приложения** распределения по очереди/нагрузке; amoCRM — цифровая воронка, автоматизация сделок и создание задач; HubSpot — назначение и round-robin/load-balanced/random с ограничениями тарифов и типов записей. Эти сведения **не объявляются самостоятельно подтверждёнными**: их происхождение — сообщение пользователя в текущей сессии. Приложения распределения не приравниваются к встроенным функциям Битрикс24. HubSpot не включён в основное сопоставление двух продуктов по самостоятельно прочитанным материалам.
+
+Проверенные попытки обращения закончились 403; содержание следующих страниц самостоятельно не прочитано, точные названия/даты статей не установлены:
+
+- https://helpdesk.bitrix24.ru/open/24792750/
+- https://helpdesk.bitrix24.ru/open/24212648/
+- https://helpdesk.bitrix24.ru/open/27473612/
+- https://www.amocrm.ru/support/starting_work/digital_pipeline
+- https://www.amocrm.ru/support/starting_work/pipeline
+- https://www.amocrm.ru/support/digital_pipeline/digital_pipeline
+- https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows
+- https://knowledge.hubspot.com/records/create-records-on-the-updated-index-page
+
+Адреса без отслеживающих параметров. Они сохранены для последующей проверки, а не как доказательство всех характеристик. После восстановления доступа нужно отдельно проверить настройки, тарифы, типы объектов и ограничения ротации; отсутствие нужной модели в прочитанных материалах не означает отсутствия её в продукте. Полный список научной литературы ВКР не составлялся.
