@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="165mm" height="183.33mm" viewBox="0 0 720 800" role="img" aria-labelledby="title desc">
+<title id="title">Р4а. Расчёт и предпросмотр</title><desc id="desc">Чёрно-белая схема для ВКР. Редактируемая логика — одноимённый Mermaid; точная компоновка — render_svg.py.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#000"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g class="node-block">
+<rect x="3.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="70.0" y="49.76" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="70.0" dy="0">Администратор</tspan>
+</text>
+</g>
+<line class="lifeline" x1="70.0" y1="75" x2="70.0" y2="685" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="196.33333333333337" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="263.33333333333337" y="41.01" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="263.33333333333337" dy="0">Веб-обработка</tspan>
+<tspan x="263.33333333333337" dy="17.5">и формы</tspan>
+</text>
+</g>
+<line class="lifeline" x1="263.33333333333337" y1="75" x2="263.33333333333337" y2="685" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="389.6666666666667" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="456.6666666666667" y="41.01" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="456.6666666666667" dy="0">Ядро</tspan>
+<tspan x="456.6666666666667" dy="17.5">расчёта</tspan>
+</text>
+</g>
+<line class="lifeline" x1="456.6666666666667" y1="75" x2="456.6666666666667" y2="685" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="583.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="650.0" y="41.01" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="650.0" dy="0">Подготовка</tspan>
+<tspan x="650.0" dy="17.5">снимка</tspan>
+</text>
+</g>
+<line class="lifeline" x1="650.0" y1="75" x2="650.0" y2="685" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<polyline points="70.0,118 263.33333333333337,118" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="48.4666666666667" y="87" width="236.39999999999998" height="18" fill="#fff"/>
+<text x="166.66666666666669" y="100" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="166.66666666666669" dy="0">Ввод экспертных оценок</tspan>
+</text>
+<polyline points="263.33333333333337,144 289.33333333333337,144 289.33333333333337,157 263.33333333333337,157" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="48.23333333333338" y="121" width="430.2" height="18" fill="#fff"/>
+<text x="263.33333333333337" y="134" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="263.33333333333337" dy="0">Права, проверка формы и подготовка задачи</tspan>
+</text>
+<polyline points="263.33333333333337,186 456.6666666666667,186" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="241.8" y="155" width="236.39999999999998" height="18" fill="#fff"/>
+<text x="360.0" y="168" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Расчёт обоими методами</tspan>
+</text>
+<polyline points="456.6666666666667,220 263.33333333333337,220" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="155.10000000000002" y="189" width="409.79999999999995" height="18" fill="#fff"/>
+<text x="360.0" y="202" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Планы, точные показатели и доказанность</tspan>
+</text>
+<rect x="8" y="223" width="704" height="26" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="241" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+<tspan x="360" dy="0">Полного допустимого плана ветвей/границ нет → подготовка недоступна</tspan>
+</text>
+<rect x="8" y="259" width="704" height="26" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="277" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+<tspan x="360" dy="0">Есть полный допустимый план ветвей/границ → продолжить</tspan>
+</text>
+<polyline points="263.33333333333337,326 650.0,326" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="190.0" y="295" width="522.0" height="18" fill="#fff"/>
+<text x="451.0" y="308" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="451.0" dy="0">Проверить готовый план и выдать подписанный снимок</tspan>
+</text>
+<rect x="8" y="329" width="704" height="48" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="347" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360" dy="0">Исходные 15 минут начинаются при выдаче снимка после расчёта. Подпись не</tspan>
+<tspan x="360" dy="18">шифрует данные и не доказывает экспертные оценки.</tspan>
+</text>
+<polyline points="650.0,418 263.33333333333337,418" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="216.0666666666667" y="387" width="481.2" height="18" fill="#fff"/>
+<text x="456.6666666666667" y="400" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="456.6666666666667" dy="0">Подписанные входы, план, автор и идентификатор</tspan>
+</text>
+<polyline points="263.33333333333337,452 70.0,452" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="8.0" y="421" width="338.4" height="18" fill="#fff"/>
+<text x="177.2" y="434" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="177.2" dy="0">Рекомендация и переход к деталям</tspan>
+</text>
+<polyline points="70.0,486 263.33333333333337,486" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="8.0" y="455" width="634.1999999999999" height="18" fill="#fff"/>
+<text x="325.09999999999997" y="468" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="325.09999999999997" dy="0">Клиенты, описания, горизонт, общий срок; подтверждение оценок</tspan>
+</text>
+<polyline points="263.33333333333337,520 650.0,520" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="88.0" y="489" width="624.0" height="18" fill="#fff"/>
+<text x="400.0" y="502" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="400.0" dy="0">Проверка подписи, исходного срока и актуальности сотрудников</tspan>
+</text>
+<polyline points="650.0,554 456.6666666666667,554" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="128.80000000000007" y="523" width="583.1999999999999" height="18" fill="#fff"/>
+<text x="420.40000000000003" y="536" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="420.40000000000003" dy="0">Проверка готового назначения и точных метрик, без поиска</tspan>
+</text>
+<polyline points="456.6666666666667,588 650.0,588" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="465.73333333333335" y="557" width="175.2" height="18" fill="#fff"/>
+<text x="553.3333333333334" y="570" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="553.3333333333334" dy="0">Проверенный план</tspan>
+</text>
+<polyline points="263.33333333333337,622 650.0,622" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="47.200000000000045" y="591" width="664.8" height="18" fill="#fff"/>
+<text x="379.6" y="604" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="379.6" dy="0">Проверить детали и формы заявок; подписать подготовленный снимок</tspan>
+</text>
+<polyline points="650.0,656 263.33333333333337,656" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="149.20000000000005" y="625" width="562.8" height="18" fill="#fff"/>
+<text x="430.6" y="638" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="430.6" dy="0">Подготовленный снимок; исходное время выдачи сохранено</tspan>
+</text>
+<polyline points="263.33333333333337,690 70.0,690" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="8.0" y="659" width="470.99999999999994" height="18" fill="#fff"/>
+<text x="243.49999999999997" y="672" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="243.49999999999997" dy="0">Предварительный просмотр без создания записей</tspan>
+</text>
+<rect x="8" y="693" width="704" height="66" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="711" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360" dy="0">Расчёт и предпросмотр не создают заявок, задач или подтверждения.</tspan>
+<tspan x="360" dy="18">Предпросмотр не продлевает исходные 15 минут. Явное финальное согласие и</tspan>
+<tspan x="360" dy="18">запись показаны в Р4б.</tspan>
+</text>
+</svg>

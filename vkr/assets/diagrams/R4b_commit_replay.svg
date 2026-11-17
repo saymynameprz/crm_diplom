@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="165mm" height="238.33mm" viewBox="0 0 720 1040" role="img" aria-labelledby="title desc">
+<title id="title">Р4б. Подтверждение, повтор и атомарное сохранение</title><desc id="desc">Чёрно-белая схема для ВКР. Редактируемая логика — одноимённый Mermaid; точная компоновка — render_svg.py.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#000"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g class="node-block">
+<rect x="3.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="70.0" y="49.76" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="70.0" dy="0">Администратор</tspan>
+</text>
+</g>
+<line class="lifeline" x1="70.0" y1="75" x2="70.0" y2="907" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="148.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="215.0" y="41.01" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="215.0" dy="0">Веб-обработка</tspan>
+<tspan x="215.0" dy="17.5">и формы</tspan>
+</text>
+</g>
+<line class="lifeline" x1="215.0" y1="75" x2="215.0" y2="907" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="293.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="360.0" y="32.26" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Сохранение</tspan>
+<tspan x="360.0" dy="17.5">и сервис</tspan>
+<tspan x="360.0" dy="17.5">заявки</tspan>
+</text>
+</g>
+<line class="lifeline" x1="360.0" y1="75" x2="360.0" y2="907" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="438.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="505.0" y="41.01" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="505.0" dy="0">Проверка</tspan>
+<tspan x="505.0" dy="17.5">плана в ядре</tspan>
+</text>
+</g>
+<line class="lifeline" x1="505.0" y1="75" x2="505.0" y2="907" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<g class="node-block">
+<rect x="583.0" y="15" width="134" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="650.0" y="41.01" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="400" text-anchor="middle">
+<tspan x="650.0" dy="0">Модели /</tspan>
+<tspan x="650.0" dy="17.5">SQLite</tspan>
+</text>
+</g>
+<line class="lifeline" x1="650.0" y1="75" x2="650.0" y2="907" stroke="#000" stroke-width="1" stroke-dasharray="4 5"/>
+<polyline points="70.0,118 215.0,118" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="8.0" y="87" width="613.8" height="18" fill="#fff"/>
+<text x="314.9" y="100" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="314.9" dy="0">Явное согласие на создание; отдельно — на недоказанный план</tspan>
+</text>
+<polyline points="215.0,152 360.0,152" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="138.70000000000002" y="121" width="297.59999999999997" height="18" fill="#fff"/>
+<text x="287.5" y="134" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="287.5" dy="0">Тот же подготовленный снимок</tspan>
+</text>
+<polyline points="360.0,178 386.0,178 386.0,191 360.0,191" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="129.60000000000002" y="155" width="460.79999999999995" height="18" fill="#fff"/>
+<text x="360.0" y="168" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Подпись, автор, действующие права и согласия</tspan>
+</text>
+<polyline points="360.0,220 650.0,220" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="200.20000000000005" y="189" width="511.79999999999995" height="18" fill="#fff"/>
+<text x="456.1" y="202" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="456.1" dy="0">Поиск ID подтверждения, сверка автора и отпечатка</tspan>
+</text>
+<rect x="8" y="223" width="704" height="26" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="241" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+<tspan x="360" dy="0">Повтор завершённого пакета: тот же ID, автор и отпечаток</tspan>
+</text>
+<polyline points="650.0,290 360.0,290" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="128.80000000000007" y="259" width="583.1999999999999" height="18" fill="#fff"/>
+<text x="420.40000000000003" y="272" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="420.40000000000003" dy="0">Сохранённые идентификаторы, даже после исходных 15 минут</tspan>
+</text>
+<polyline points="360.0,324 215.0,324" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="103.0" y="293" width="369.0" height="18" fill="#fff"/>
+<text x="287.5" y="306" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="287.5" dy="0">Прежний результат без новых записей</tspan>
+</text>
+<rect x="8" y="327" width="704" height="26" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="345" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+<tspan x="360" dy="0">Иначе: новое подтверждение. Иной автор / отпечаток с тем же ID → отказ</tspan>
+</text>
+<polyline points="360.0,386 386.0,386 386.0,399 360.0,399" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="129.60000000000002" y="363" width="460.79999999999995" height="18" fill="#fff"/>
+<text x="360.0" y="376" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Исходные 15 минут и актуальность сотрудников</tspan>
+</text>
+<polyline points="360.0,428 505.0,428" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="166.40000000000003" y="397" width="532.1999999999999" height="18" fill="#fff"/>
+<text x="432.5" y="410" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="432.5" dy="0">Проверка готового плана и точных метрик, без поиска</tspan>
+</text>
+<polyline points="505.0,462 360.0,462" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="344.9" y="431" width="175.2" height="18" fill="#fff"/>
+<text x="432.5" y="444" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="432.5" dy="0">Проверенный план</tspan>
+</text>
+<rect x="8" y="465" width="704" height="26" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="483" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+<tspan x="360" dy="0">Начало одной транзакции</tspan>
+</text>
+<polyline points="360.0,532 650.0,532" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="190.0" y="501" width="522.0" height="18" fill="#fff"/>
+<text x="451.0" y="514" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="451.0" dy="0">Первая запись — занять уникальный ID подтверждения</tspan>
+</text>
+<polyline points="360.0,558 386.0,558 386.0,571 360.0,571" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="83.70000000000005" y="535" width="552.5999999999999" height="18" fill="#fff"/>
+<text x="360.0" y="548" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Повторить права, сроки, сотрудников, клиентов и формы</tspan>
+</text>
+<polyline points="360.0,600 505.0,600" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="186.8" y="569" width="491.4" height="18" fill="#fff"/>
+<text x="432.5" y="582" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="432.5" dy="0">Повторная проверка готового назначения и метрик</tspan>
+</text>
+<polyline points="505.0,634 360.0,634" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="334.7" y="603" width="195.6" height="18" fill="#fff"/>
+<text x="432.5" y="616" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="432.5" dy="0">Результат проверки</tspan>
+</text>
+<polyline points="360.0,686 650.0,686" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="128.80000000000007" y="637" width="583.1999999999999" height="36" fill="#fff"/>
+<text x="420.40000000000003" y="650" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="420.40000000000003" dy="0">Для каждой строки: заявка + автозадача; проверить связи,</tspan>
+<tspan x="420.40000000000003" dy="18">состояния и срок</tspan>
+</text>
+<polyline points="360.0,712 386.0,712 386.0,725 360.0,725" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="78.60000000000002" y="689" width="562.8" height="18" fill="#fff"/>
+<text x="360.0" y="702" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360.0" dy="0">Финальная проверка исходных 15 минут и срока обработки</tspan>
+</text>
+<text x="14" y="738" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="start">
+<tspan x="14" dy="0">Альтернатива исходов</tspan>
+</text>
+<polyline points="360.0,774 650.0,774" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="159.4000000000001" y="743" width="552.5999999999999" height="18" fill="#fff"/>
+<text x="435.70000000000005" y="756" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="435.70000000000005" dy="0">Успех: записать созданные ID и COMMIT всей транзакции</tspan>
+</text>
+<polyline points="360.0,808 650.0,808" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="47.200000000000045" y="777" width="664.8" height="18" fill="#fff"/>
+<text x="379.6" y="790" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="379.6" dy="0">Ошибка внутри транзакции: ROLLBACK заявок, задач и подтверждения</tspan>
+</text>
+<rect x="3" y="743" width="714" height="73" rx="0" fill="none" stroke="#000" stroke-width="1.4"/>
+<line x1="3" y1="776" x2="717" y2="776" stroke="#000" stroke-dasharray="5 4"/>
+<rect x="8" y="811" width="704" height="26" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="829" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+<tspan x="360" dy="0">Конец транзакции: один из двух исходов выше</tspan>
+</text>
+<polyline points="360.0,878 215.0,878" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="174.4" y="847" width="226.2" height="18" fill="#fff"/>
+<text x="287.5" y="860" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="287.5" dy="0">Результат либо ошибка</tspan>
+</text>
+<rect x="3" y="223" width="714" height="663" rx="0" fill="none" stroke="#000" stroke-width="1.4"/>
+<line x1="3" y1="326" x2="717" y2="326" stroke="#000" stroke-dasharray="5 4"/>
+<polyline points="215.0,912 70.0,912" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="44.7" y="881" width="195.6" height="18" fill="#fff"/>
+<text x="142.5" y="894" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="142.5" dy="0">Показать результат</tspan>
+</text>
+<rect x="8" y="915" width="704" height="84" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="360" y="933" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="360" dy="0">Ошибка до записи → отказ без новых заявок. Сбой ответа после COMMIT не</tspan>
+<tspan x="360" dy="18">откатывает пакет: повторить то же подтверждение. Конкурентный конфликт ID</tspan>
+<tspan x="360" dy="18">→ прочитать совпавший результат; занятость SQLite → повторить то же</tspan>
+<tspan x="360" dy="18">действие.</tspan>
+</text>
+</svg>

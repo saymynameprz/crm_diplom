@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="245mm" height="158.80mm" viewBox="0 0 1080 700" role="img" aria-labelledby="title desc">
+<title id="title">Р2. Связи сущностей и ограничения</title><desc id="desc">Чёрно-белая схема для ВКР. Редактируемая логика — одноимённый Mermaid; точная компоновка — render_svg.py.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#000"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g class="node-block">
+<rect x="420" y="25" width="240" height="60" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="540.0" y="60.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="540.0" dy="0">Пользователь</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="30" y="220" width="220" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="140.0" y="257.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="140.0" dy="0">Клиент</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="420" y="220" width="240" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="540.0" y="257.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="540.0" dy="0">Заявка</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="840" y="220" width="210" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="945.0" y="257.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="945.0" dy="0">Сделка</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="30" y="440" width="250" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="155.0" y="477.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="155.0" dy="0">Взаимодействие</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="420" y="440" width="240" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="540.0" y="477.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="540.0" dy="0">Задача</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="790" y="435" width="270" height="90" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="925.0" y="465.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="925.0" dy="0">Подтверждение</tspan>
+<tspan x="925.0" dy="20.0">распределения</tspan>
+<tspan x="925.0" dy="20.0">Уникальный ID</tspan>
+</text>
+</g>
+<polyline points="540,85 540,220" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="451.3" y="134" width="177.4" height="41.5" fill="#fff"/>
+<text x="540" y="149" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="540" dy="0">0..1 : 0..N</tspan>
+<tspan x="540" dy="18.75">ответственный / ОЧ</tspan>
+</text>
+<polyline points="600,85 600,130 945,130 945,220" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="710.6" y="117" width="158.8" height="22.75" fill="#fff"/>
+<text x="790" y="132" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="790" dy="0">0..1 : 0..N / ОЧ</tspan>
+</text>
+<polyline points="660,55 1070,55 1070,480 1060,480" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="886.55" y="42" width="130.9" height="22.75" fill="#fff"/>
+<text x="952" y="57" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="952" dy="0">1 : 0..N / ЗУ</tspan>
+</text>
+<polyline points="480,85 480,130 300,130 300,472 280,472" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="313.5" y="117" width="103.0" height="41.5" fill="#fff"/>
+<text x="365" y="132" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="365" dy="0">1 : 0..N</tspan>
+<tspan x="365" dy="18.75">автор / ЗУ</tspan>
+</text>
+<polyline points="660,70 745,70 745,472 660,472" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="656.3" y="337" width="177.4" height="41.5" fill="#fff"/>
+<text x="745" y="352" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="745" dy="0">0..1 : 0..N</tspan>
+<tspan x="745" dy="18.75">ответственный / ОЧ</tspan>
+</text>
+<polyline points="250,252 420,252" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="268.55" y="233" width="130.9" height="22.75" fill="#fff"/>
+<text x="334" y="248" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="334" dy="0">1 : 0..N / ЗУ</tspan>
+</text>
+<polyline points="140,285 140,440" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="83.85" y="341" width="112.3" height="41.5" fill="#fff"/>
+<text x="140" y="356" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="140" dy="0">1 : 0..N</tspan>
+<tspan x="140" dy="18.75">клиент / ЗУ</tspan>
+</text>
+<path d="M205 285V400H288 Q300 382 312 400 H528 Q540 382 552 400 H733 Q745 382 757 400 H975V285" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="307.7" y="385" width="214.6" height="22.75" fill="#fff"/>
+<text x="415" y="400" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="415" dy="0">1 : 0..N / клиент / ЗУ</tspan>
+</text>
+<polyline points="540,285 540,440" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="483.85" y="339" width="112.3" height="41.5" fill="#fff"/>
+<text x="540" y="354" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="540" dy="0">1 : 0..N</tspan>
+<tspan x="540" dy="18.75">заявка / ЗУ</tspan>
+</text>
+<text x="30" y="565" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="start">
+<tspan x="30" dy="0">Кратности: родитель для одной дочерней записи : дочерние для одного родителя.</tspan>
+<tspan x="30" dy="18.75">1 — родитель обязателен; 0..1 — необязателен; 0..N — любое число дочерних записей.</tspan>
+<tspan x="30" dy="18.75">ОЧ — при удалении пользователя ссылка очищается. ЗУ — удаление родителя запрещено.</tspan>
+<tspan x="30" dy="18.75">ОЧ / ЗУ описывают on_delete Django; не обещают отдельный SQL ON DELETE.</tspan>
+<tspan x="30" dy="18.75">Не более одной автоматической задачи на заявку; ручных задач может быть несколько.</tspan>
+<tspan x="30" dy="18.75">Прямой связи задачи со сделкой нет. Список созданных ID подтверждения — JSON, не FK.</tspan>
+<tspan x="30" dy="18.75">Квалификации, ставки и резервы часов — входы расчёта, не сущности хранения.</tspan>
+</text>
+</svg>

@@ -1,0 +1,23 @@
+erDiagram
+ direction TB
+ User["Пользователь"]
+ Client["Клиент"]
+ Request["Заявка"]
+ Task["Задача"] {
+   bool is_automatic "≤1 автозадачи на заявку"
+ }
+ Deal["Сделка"]
+ Interaction["Взаимодействие"]
+ Commit["Подтверждение распределения"] {
+   UUID token PK "Уникальный ID"
+   JSON created_ids "Не внешние ключи"
+ }
+ User o|--o{ Request : "ответственный / очистка"
+ User o|--o{ Task : "ответственный / очистка"
+ User o|--o{ Deal : "ответственный / очистка"
+ User ||--o{ Interaction : "автор / запрет удаления"
+ User ||--o{ Commit : "автор / запрет удаления"
+ Client ||--o{ Request : "клиент / запрет удаления"
+ Client ||--o{ Deal : "клиент / запрет удаления"
+ Client ||--o{ Interaction : "клиент / запрет удаления"
+ Request ||--o{ Task : "заявка / запрет удаления"

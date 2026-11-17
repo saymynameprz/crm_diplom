@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="245mm" height="158.80mm" viewBox="0 0 1080 700" role="img" aria-labelledby="title desc">
+<title id="title">Р1. Архитектура CRM</title><desc id="desc">Чёрно-белая схема для ВКР. Редактируемая логика — одноимённый Mermaid; точная компоновка — render_svg.py.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#000"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<rect x="175" y="45" width="720" height="540" rx="0" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="535" y="69" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="700" text-anchor="middle">
+<tspan x="535" dy="0">Единое приложение Django</tspan>
+</text>
+<g class="node-block">
+<rect x="15" y="100" width="140" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="85.0" y="127.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="85.0" dy="0">Браузер</tspan>
+<tspan x="85.0" dy="20.0">HTTP</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="215" y="100" width="175" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="302.5" y="127.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="302.5" dy="0">Маршруты CRM</tspan>
+<tspan x="302.5" dy="20.0">и админ-панели</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="455" y="100" width="185" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="547.5" y="127.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="547.5" dy="0">Представления</tspan>
+<tspan x="547.5" dy="20.0">права и вызовы</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="715" y="100" width="160" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="795.0" y="127.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="795.0" dy="0">Шаблоны</tspan>
+<tspan x="795.0" dy="20.0">HTML-страницы</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="215" y="245" width="175" height="75" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="302.5" y="277.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="302.5" dy="0">Формы</tspan>
+<tspan x="302.5" dy="20.0">проверка входа</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="455" y="245" width="185" height="75" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="547.5" y="277.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="547.5" dy="0">Аналитические</tspan>
+<tspan x="547.5" dy="20.0">вычисления</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="715" y="245" width="160" height="75" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="795.0" y="277.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="795.0" dy="0">Подготовка и</tspan>
+<tspan x="795.0" dy="20.0">подтверждение</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="215" y="415" width="175" height="85" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="302.5" y="442.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="302.5" dy="0">Математическое</tspan>
+<tspan x="302.5" dy="20.0">ядро: два метода</tspan>
+<tspan x="302.5" dy="20.0">и проверка плана</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="455" y="415" width="185" height="85" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="547.5" y="442.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="547.5" dy="0">Отображение</tspan>
+<tspan x="547.5" dy="20.0">аналитики</tspan>
+<tspan x="547.5" dy="20.0">и распределения</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="715" y="415" width="160" height="85" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="795.0" y="452.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="795.0" dy="0">Сервис заявки</tspan>
+<tspan x="795.0" dy="20.0">и автозадачи</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="455" y="530" width="420" height="40" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="665.0" y="555.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="665.0" dy="0">Модели и ORM</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="925" y="525" width="140" height="55" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="995.0" y="557.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="995.0" dy="0">SQLite</tspan>
+</text>
+</g>
+<polyline points="155,132 215,132" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="390,132 455,132" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="640,132 715,132" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="610,165 610,180 970,180 970,390 830,390 830,415" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="765.25" y="166" width="149.5" height="22.75" fill="#fff"/>
+<text x="840" y="181" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="840" dy="0">создание заявки</tspan>
+</text>
+<polyline points="390,480 455,480" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="389.1" y="456" width="65.8" height="22.75" fill="#fff"/>
+<text x="422" y="471" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="422" dy="0">данные</tspan>
+</text>
+<polyline points="795,100 795,20 85,20 85,100" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="388.5" y="8" width="103.0" height="22.75" fill="#fff"/>
+<text x="440" y="23" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="440" dy="0">HTML-ответ</tspan>
+</text>
+<polyline points="490,165 490,205 302,205 302,245" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="548,165 548,245" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="610,165 610,205 795,205 795,245" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="302,320 302,415" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="236.55" y="342" width="130.9" height="41.5" fill="#fff"/>
+<text x="302" y="357" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="302" dy="0">данные через</tspan>
+<tspan x="302" dy="18.75">представление</tspan>
+</text>
+<polyline points="548,320 548,415" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="505.8" y="355" width="84.4" height="22.75" fill="#fff"/>
+<text x="548" y="370" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="548" dy="0">значения</tspan>
+</text>
+<polyline points="795,320 795,415" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M755 320V385H560 Q548 367 536 385 H427 Q415 367 403 385 H405V455H390" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="554.9" y="371" width="140.2" height="22.75" fill="#fff"/>
+<text x="625" y="386" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="625" dy="0">проверка плана</tspan>
+</text>
+<polyline points="390,280 415,280 415,550 455,550" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="640,280 680,280 680,530" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="875,280 905,280 905,513 850,513 850,530" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="795,500 795,530" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="875,550 925,550" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="640,452 700,452 700,175 795,175 795,165" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<rect x="646.85" y="348" width="112.3" height="22.75" fill="#fff"/>
+<text x="703" y="363" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="703" dy="0">отображение</tspan>
+</text>
+<text x="30" y="615" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="start">
+<tspan x="30" dy="0">Сплошные стрелки — обработка / доступ к данным; пунктир — данные и отображение.</tspan>
+<tspan x="30" dy="18.75">Формы готовят задачу; расчёт запускает представление. Ядро не обращается к SQLite.</tspan>
+<tspan x="30" dy="18.75">Обычные изменения могут идти из форм в ORM. Авторизация входит в Django.</tspan>
+<tspan x="30" dy="18.75">Пересечения без точки и с дугой не соединяют линии; фоновых процессов нет.</tspan>
+</text>
+</svg>

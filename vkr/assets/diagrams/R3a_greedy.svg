@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="165mm" height="206.25mm" viewBox="0 0 720 900" role="img" aria-labelledby="title desc">
+<title id="title">Р3а. Жадный алгоритм</title><desc id="desc">Чёрно-белая схема для ВКР. Редактируемая логика — одноимённый Mermaid; точная компоновка — render_svg.py.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#000"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g class="node-block">
+<rect x="190" y="15" width="335" height="50" rx="16" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="35.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">А. Жадный алгоритм</tspan>
+<tspan x="357.5" dy="20.0">общая модель из 2.2</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="190" y="85" width="335" height="55" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="107.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Проверенный поддерживаемый вход;</tspan>
+<tspan x="357.5" dy="20.0">заявки и сотрудники — по ID</tspan>
+</text>
+</g>
+<g class="node-block">
+<path d="M253 165H462L480 190.0L462 215H253L235 190.0Z" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="195.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Пустой пакет?</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="545" y="160" width="165" height="75" rx="16" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="627.5" y="192.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="627.5" dy="0">Оптимальный</tspan>
+<tspan x="627.5" dy="20.0">пустой план</tspan>
+</text>
+</g>
+<g class="node-block">
+<path d="M253 240H462L480 265.0L462 290H253L235 265.0Z" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="270.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Все заявки назначены?</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="10" y="230" width="165" height="100" rx="16" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="92.5" y="247.6" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="92.5" dy="0">Проверить план</tspan>
+<tspan x="92.5" dy="18.75">и метрики.</tspan>
+<tspan x="92.5" dy="18.75">Допустимый план.</tspan>
+<tspan x="92.5" dy="18.75">Оптимальность</tspan>
+<tspan x="92.5" dy="18.75">не доказана</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="190" y="320" width="335" height="42" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="346.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Взять следующую заявку</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="190" y="385" width="335" height="70" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="405.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Квалификация и остаток мощности:</tspan>
+<tspan x="357.5" dy="20.0">отобрать допустимых исполнителей</tspan>
+<tspan x="357.5" dy="20.0">по условию (2.11)</tspan>
+</text>
+</g>
+<g class="node-block">
+<path d="M253 480H462L480 505.0L462 530H253L235 505.0Z" fill="#f5f5f5" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="510.44" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Есть кандидаты?</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="545" y="465" width="165" height="105" rx="16" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="627.5" y="492.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="627.5" dy="0">Неудача</tspan>
+<tspan x="627.5" dy="20.0">эвристики:</tspan>
+<tspan x="627.5" dy="20.0">невыполнимость</tspan>
+<tspan x="627.5" dy="20.0">не доказана</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="190" y="560" width="335" height="55" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="582.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Точные приращения той же F</tspan>
+<tspan x="357.5" dy="20.0">для всех кандидатов: (2.12)</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="190" y="640" width="335" height="55" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="662.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Минимум приращения;</tspan>
+<tspan x="357.5" dy="20.0">при равенстве — меньший ID</tspan>
+</text>
+</g>
+<g class="node-block">
+<rect x="190" y="720" width="335" height="65" rx="0" fill="#fff" stroke="#000" stroke-width="1.4"/>
+<text x="357.5" y="737.94" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="middle">
+<tspan x="357.5" dy="0">Закрепить назначение.</tspan>
+<tspan x="357.5" dy="20.0">Обновить часы и максимум загрузки.</tspan>
+<tspan x="357.5" dy="20.0">Без возврата</tspan>
+</text>
+</g>
+<polyline points="357,65 357,85" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,140 357,165" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,215 357,240" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,290 357,320" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,362 357,385" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,455 357,480" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,530 357,560" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,615 357,640" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="357,695 357,720" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<polyline points="480,190 545,190" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="495.7" y="169" width="28.6" height="22.75" fill="#fff"/>
+<text x="510" y="184" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="510" dy="0">Да</tspan>
+</text>
+<polyline points="235,265 175,265" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="190.7" y="243" width="28.6" height="22.75" fill="#fff"/>
+<text x="205" y="258" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="205" dy="0">Да</tspan>
+</text>
+<polyline points="480,505 545,505" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="491.05" y="481" width="37.9" height="22.75" fill="#fff"/>
+<text x="510" y="496" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="510" dy="0">Нет</tspan>
+</text>
+<polyline points="357,785 357,808 5,808 5,220 260,220 260,240" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="361.05" y="217" width="37.9" height="22.75" fill="#fff"/>
+<text x="380" y="232" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="380" dy="0">Нет</tspan>
+</text>
+<rect x="361.05" y="295" width="37.9" height="22.75" fill="#fff"/>
+<text x="380" y="310" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="380" dy="0">Нет</tspan>
+</text>
+<rect x="367.7" y="535" width="28.6" height="22.75" fill="#fff"/>
+<text x="382" y="550" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="middle">
+<tspan x="382" dy="0">Да</tspan>
+</text>
+<text x="30" y="835" fill="#000" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" text-anchor="start">
+<tspan x="30" dy="0">Некорректный ввод и неподдерживаемые гарантии отклоняются до поиска.</tspan>
+<tspan x="30" dy="18.75">Пустая квалификационная строка даёт ранний отказ эвристики:</tspan>
+<tspan x="30" dy="18.75">это показано как отсутствие кандидатов.</tspan>
+</text>
+</svg>
