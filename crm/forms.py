@@ -37,8 +37,26 @@ class ClientRequestForm(forms.ModelForm):
         if user.is_superuser:
             self.fields["assigned_to"].queryset = get_user_model().objects.filter(is_active=True).order_by("username")
             self.fields["assigned_to"].required = True
+            if not self.instance._state.adding:
+                self.mismatched_open_tasks = (self.instance.tasks.filter(status__in=Task.OPEN_STATUSES)
+                                              .exclude(assigned_to_id=self.instance.assigned_to_id)
+                                              .select_related("assigned_to"))
+                if self.mismatched_open_tasks:
+                    self.fields["confirm_open_task_reassignment"] = forms.BooleanField(
+                        label="Подтверждаю перенос открытых задач с несовпадающим ответственным",
+                        required=False,
+                    )
         else:
             del self.fields["assigned_to"]
+
+    def clean(self):
+        cleaned = super().clean()
+        if ("assigned_to" in self.changed_data and "assigned_to" in cleaned
+                and "confirm_open_task_reassignment" in self.fields
+                and not cleaned.get("confirm_open_task_reassignment")):
+            self.add_error("confirm_open_task_reassignment",
+                           "Проверьте перечисленные задачи и подтвердите их перенос.")
+        return cleaned
 
     def save(self, commit=True):
         if self.instance._state.adding:

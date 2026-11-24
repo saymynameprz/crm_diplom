@@ -7,10 +7,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, RequestDataTooBig
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -206,8 +206,34 @@ class RequestCreateView(RequestAccessMixin, RequestFormMixin, CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class RequestUpdateView(RequestAccessMixin, RequestFormMixin, SuccessMessageMixin, UpdateView):
+class RequestTaskWriteMixin:
+    def post(self, request, *args, **kwargs):
+        try:
+            # On SQLite, keep the ownership checks and the writes in one transaction.
+            with transaction.atomic():
+                response = super().post(request, *args, **kwargs)
+        except DatabaseError:
+            logger.exception("Не удалось сохранить изменения заявки или задачи")
+            return HttpResponse(
+                "Данные не сохранены. Откройте форму заново и повторите действие.",
+                status=503,
+                content_type="text/plain; charset=utf-8",
+            )
+        if isinstance(response, HttpResponseRedirect):
+            messages.success(request, self.success_message)
+        return response
+
+
+class RequestUpdateView(RequestAccessMixin, RequestFormMixin, RequestTaskWriteMixin, UpdateView):
     success_message = "Заявка сохранена."
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if "assigned_to" in form.changed_data:
+            self.object.tasks.filter(status__in=Task.OPEN_STATUSES).exclude(
+                assigned_to_id=self.object.assigned_to_id,
+            ).update(assigned_to_id=self.object.assigned_to_id, updated_at=timezone.now())
+        return response
 
 
 class RequestDeleteView(RequestAccessMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
@@ -283,11 +309,11 @@ class TaskFormMixin:
         return {**super().get_form_kwargs(), "user": self.request.user}
 
 
-class TaskCreateView(TaskAccessMixin, TaskFormMixin, SuccessMessageMixin, CreateView):
+class TaskCreateView(TaskAccessMixin, TaskFormMixin, RequestTaskWriteMixin, CreateView):
     success_message = "Задача создана."
 
 
-class TaskUpdateView(TaskAccessMixin, TaskFormMixin, SuccessMessageMixin, UpdateView):
+class TaskUpdateView(TaskAccessMixin, TaskFormMixin, RequestTaskWriteMixin, UpdateView):
     success_message = "Задача сохранена."
 
 

@@ -5,7 +5,20 @@
 <h1>{% if object %}Редактирование заявки{% else %}Новая заявка{% endif %}</h1>
 <p class="form-intro">{% if object %}Измените сведения и текущее состояние заявки.{% else %}Новая заявка создаётся в статусе «Новая» вместе с автоматической задачей.{% endif %}</p>
 {% if not user.is_superuser %}<p class="message message-info">Ответственным будете вы. Переназначить заявку может только администратор.</p>{% endif %}
-{% if object and user.is_superuser %}<p class="message message-warning" role="note">При смене ответственного существующие задачи требуют ручного переназначения. Откройте каждую задачу и назначьте нового ответственного.</p>{% endif %}
+{% if object and user.is_superuser %}
+<p class="message message-warning" role="note">При смене ответственного заявки все её открытые задачи перейдут новому ответственному. У завершённых задач исполнитель и дата завершения сохранятся.</p>
+{% if form.mismatched_open_tasks %}
+<section aria-labelledby="mismatched-tasks-title">
+    <h2 id="mismatched-tasks-title">Открытые задачи с несовпадающим ответственным</h2>
+    <p>Проверьте эти назначения перед переносом заявки.</p>
+    <ul class="client-list">
+        {% for task in form.mismatched_open_tasks %}
+        <li><a href="{{ task.get_absolute_url }}">{{ task.title }}</a> — {{ task.assigned_to|default_if_none:"Не назначен" }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endif %}
 <form method="post" class="form-layout">
     {% include "crm/_form_fields.html" %}
     <div class="actions form-actions"><button type="submit">Сохранить</button><a class="button button-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'request_list' %}{% endif %}">Отмена</a></div>
