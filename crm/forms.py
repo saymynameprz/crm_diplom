@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 from fractions import Fraction
 import re
@@ -269,7 +269,30 @@ class OptimizationDecimalField(forms.CharField):
         return result
 
 
+class OptimizationDateTimeField(forms.DateTimeField):
+    def __init__(self, **kwargs):
+        super().__init__(widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}), **kwargs)
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        if isinstance(value, str) and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}", value):
+            try:
+                return datetime.fromisoformat(value).replace(tzinfo=timezone.utc)
+            except ValueError:
+                pass
+        raise forms.ValidationError("Укажите дату и время UTC с точностью до минуты.", code="invalid")
+
+
 class OptimizationForm(SingleValueForm):
+    horizon_start = OptimizationDateTimeField(label="Начало расчётного горизонта, UTC")
+    due_at = OptimizationDateTimeField(label="Окончание горизонта и общий срок пакета, UTC")
+    # A re-rendered calculation always requires fresh consent for the next submission.
+    estimates_confirmed = forms.BooleanField(
+        label="Подтверждаю, что проверил оценки и они относятся к этому горизонту.",
+        widget=forms.CheckboxInput(check_test=lambda value: False),
+    )
     alpha = OptimizationDecimalField(label="Вес стоимости α", maximum="1", initial="0.50")
     beta = OptimizationDecimalField(label="Вес загрузки β", maximum="1", initial="0.50")
 
@@ -298,6 +321,13 @@ class OptimizationForm(SingleValueForm):
 
     def clean(self):
         cleaned = super().clean()
+        start, end = cleaned.get("horizon_start"), cleaned.get("due_at")
+        if end is not None and end <= django_timezone.now():
+            self.add_error("due_at", forms.ValidationError("Общий срок должен быть в будущем.", code="expired"))
+        if start is not None and end is not None and start >= end:
+            self.add_error("horizon_start", "Начало горизонта должно быть раньше общего срока.")
+        if cleaned.get("estimates_confirmed") and self.data.get("estimates_confirmed") != "on":
+            self.add_error("estimates_confirmed", "Подтвердите оценки для выбранного горизонта.")
         seen_employees, seen_requests = set(), set()
         for j in range(self.employee_count):
             key = f"employee_{j}"
@@ -352,21 +382,7 @@ class OptimizationSnapshotForm(SingleValueForm):
         return cleaned
 
 
-class OptimizationDateTimeField(forms.DateTimeField):
-    def clean(self, value):
-        if isinstance(value, str) and len(value) > 32:
-            raise forms.ValidationError("Слишком длинная дата.")
-        result = super().clean(value)
-        return result.astimezone(timezone.utc) if result is not None else None
-
-
 class OptimizationDetailsForm(OptimizationSnapshotForm):
-    horizon_start = OptimizationDateTimeField(label="Начало планового горизонта, UTC",
-        widget=forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}))
-    due_at = OptimizationDateTimeField(label="Общий срок окончания пакета, UTC",
-        widget=forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local"}))
-    estimates_confirmed = forms.BooleanField(label="Подтверждаю: A и L относятся к этому горизонту; экспертные оценки проверены мной. Глобального резервирования часов и календарной гарантии нет.")
-
     def __init__(self, *args, local_ids, **kwargs):
         super().__init__(*args, **kwargs)
         for identifier in local_ids:
@@ -374,16 +390,6 @@ class OptimizationDetailsForm(OptimizationSnapshotForm):
                 label=f"Клиент заявки {identifier}", queryset=Client.objects.order_by("full_name", "pk"))
             self.fields[f"description_{identifier}"] = forms.CharField(label=f"Описание заявки {identifier}",
                 max_length=1000, required=False, widget=forms.Textarea(attrs={"rows": 2}))
-
-    def clean(self):
-        cleaned = super().clean()
-        start, end = cleaned.get("horizon_start"), cleaned.get("due_at")
-        if end is not None and end <= django_timezone.now():
-            self.add_error("due_at", "Срок должен быть в будущем относительно подтверждения.")
-        if start is not None and end is not None and start >= end:
-            self.add_error("horizon_start", "Начало горизонта должно быть раньше общего срока.")
-        return cleaned
-
 
 class OptimizationFinalForm(OptimizationSnapshotForm):
     confirm_create = forms.BooleanField(label="Подтверждаю создание всего показанного пакета заявок и автоматических задач.")

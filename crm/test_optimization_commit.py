@@ -1,6 +1,6 @@
 """Signed two-step confirmation, atomic CRM writes and real SQLite concurrency."""
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as utc_timezone
 from decimal import Decimal
 from fractions import Fraction
 import threading
@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.core import signing
 from django.db import OperationalError, close_old_connections, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.http import QueryDict
 from django.test import Client as HttpClient, TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -19,9 +20,19 @@ from django.utils import timezone
 from .forms import OptimizationForm, OptimizationDetailsForm
 from .models import Client, ClientRequest, Task, Deal, ClientInteraction, OptimizationCommit
 from .optimization import branch_and_bound, Status
-from .optimization_commit import (CommitError, SALT, SNAPSHOT_TTL, issue_snapshot, read_snapshot,
+from .optimization_commit import (CommitError, SALT, SNAPSHOT_TTL, digest, issue_snapshot, read_snapshot,
                                   prepare_snapshot, commit_snapshot, sign_snapshot, decode_snapshot)
 from .services import create_request_with_task
+
+
+def horizon_data():
+    start = timezone.now().replace(second=0, microsecond=0, tzinfo=None)
+    return {"horizon_start": start.isoformat(timespec="minutes"),
+            "due_at": (start + timedelta(days=2)).isoformat(timespec="minutes"), "estimates_confirmed": "on"}
+
+
+def source_due_at(payload):
+    return datetime.fromisoformat(payload["source"]["due_at"]).replace(tzinfo=utc_timezone.utc)
 
 
 def source_data(workers, count=2):
@@ -33,7 +44,7 @@ def source_data(workers, count=2):
                      f"effort_{i}_0": "1" if i == 0 else "2", f"effort_{i}_1": "1" if i == 0 else "2:15"})
     if count > 2:
         data.update(capacity_0="10", capacity_1="10")
-    return data
+    return {**data, **horizon_data()}
 
 
 def calculation(actor, workers, *, count=2, unproven=False, changes=None):
@@ -47,8 +58,7 @@ def calculation(actor, workers, *, count=2, unproven=False, changes=None):
 
 
 def details_data(raw, contacts, count=2):
-    data = {"snapshot": raw, "horizon_start": timezone.now().isoformat(),
-            "due_at": (timezone.now()+timedelta(days=2)).replace(second=0, microsecond=0).isoformat(), "estimates_confirmed": "on"}
+    data = {"snapshot": raw}
     for i in range(count):
         data.update({f"client_{i+1}": str(contacts[i % len(contacts)].pk), f"description_{i+1}": f"Учебное описание {i+1}"})
     return data
@@ -62,6 +72,17 @@ def prepared(actor, workers, contacts, *, count=2, unproven=False, changes=None)
     if not form.is_valid():
         raise AssertionError(form.errors)
     return prepare_snapshot(verified, form, actor)
+
+
+def legacy_payload(raw):
+    payload = signing.loads(raw, salt=SALT)
+    payload["version"] = 1
+    dates = {name: datetime.fromisoformat(payload["source"].pop(name)).replace(tzinfo=utc_timezone.utc).isoformat()
+             for name in ("horizon_start", "due_at")}
+    del payload["source"]["estimates_confirmed"]
+    if payload["stage"] == "prepared":
+        payload["details"].update(dates, estimates_confirmed=True)
+    return payload
 
 
 class OptimizationCommitTests(TestCase):
@@ -95,19 +116,35 @@ class OptimizationCommitTests(TestCase):
 
     def test_full_two_step_http_flow_creates_nothing_before_final_confirmation(self):
         before = self.counts()
-        page = self.client.post(reverse("optimization"), source_data(self.workers))
+        data = source_data(self.workers)
+        page = self.client.post(reverse("optimization"), data)
         raw = page.context["snapshot"]
+        initial = decode_snapshot(raw, self.admin, stage="calculation")
+        self.assertEqual(initial["version"], 2)
+        for key in ("horizon_start", "due_at", "estimates_confirmed"):
+            self.assertEqual(initial["source"][key], data[key])
         self.assertEqual(self.counts(), before)
         choose = self.client.post(reverse("optimization_prepare"), {"snapshot": raw})
         self.assertEqual(choose.status_code, 200)
+        self.assertContains(choose, 'id="optimization-calculation-horizon"')
+        for field in ("horizon_start", "due_at", "estimates_confirmed"):
+            self.assertNotContains(choose, f'name="{field}"')
         self.assertEqual(self.counts(), before)
         preview = self.client.post(reverse("optimization_preview"), details_data(raw, self.contacts))
         self.assertEqual(preview.status_code, 200)
         self.assertContains(preview, "19/26")
+        self.assertContains(preview, 'id="optimization-preview-horizon"')
+        self.assertNotContains(preview, 'name="due_at"')
         self.assertContains(preview, "Подтвердить и создать заявки")
         self.assertEqual(self.counts(), before)
         token = preview.context["final_form"].initial["snapshot"]
-        response = self.post(token)
+        snapshot = decode_snapshot(token, self.admin, stage="prepared")
+        self.assertEqual(snapshot["source"], initial["source"])
+        self.assertEqual(snapshot["issued"], initial["issued"])
+        self.assertEqual(set(snapshot["details"]), {"rows"})
+        with patch("crm.views.branch_and_bound") as search:
+            response = self.post(token)
+        search.assert_not_called()
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.counts(), (before[0]+2, before[1]+2, 1))
         result = self.client.get(response.url)
@@ -133,7 +170,7 @@ class OptimizationCommitTests(TestCase):
             self.assertEqual((request.status, task.status), ("new", "new"))
             self.assertEqual(request.assigned_to_id, task.assigned_to_id)
             self.assertEqual(request.assigned_to_id, row["employee_id"])
-            self.assertEqual(request.due_at.isoformat(), payload["details"]["due_at"])
+            self.assertEqual(request.due_at, source_due_at(payload))
             self.assertEqual(task.due_at, request.due_at)
             self.assertEqual(request.tasks.filter(is_automatic=True).count(), 1)
 
@@ -173,7 +210,10 @@ class OptimizationCommitTests(TestCase):
     def test_tampered_signature_and_mathematical_fields_are_rejected(self):
         raw = self.token();before=self.counts()
         for section,key,value in (("plan","assignment",[[1,self.manager.pk],[2,self.manager.pk]]),
-                                  ("plan","metrics",{"cost":"0"}),("source","rate_0","0")):
+                                  ("plan","metrics",{"cost":"0"}),("source","rate_0","0"),
+                                  ("source", "horizon_start", "2000-01-01T00:00"),
+                                  ("source", "due_at", "2001-01-01T00:00"),
+                                  ("source", "estimates_confirmed", "off")):
             payload=signing.loads(raw,salt=SALT)
             self.assertNotEqual(payload[section][key],value)
             payload[section][key]=value
@@ -215,7 +255,9 @@ class OptimizationCommitTests(TestCase):
 
     def test_unsigned_override_fields_are_rejected(self):
         raw=self.token();before=self.counts()
-        for extra in ({"assigned_to":str(self.admin.pk)},{"objective":"0"},{"status":"new"},{"title":"Changed"}):
+        for extra in ({"assigned_to":str(self.admin.pk)},{"objective":"0"},{"status":"new"},{"title":"Changed"},
+                      {"horizon_start": "2000-01-01T00:00"}, {"due_at": "2001-01-01T00:00"},
+                      {"estimates_confirmed": "on"}):
             self.assertEqual(self.post(raw,**extra).status_code,400)
             self.assertEqual(self.counts(),before)
 
@@ -296,7 +338,7 @@ class OptimizationCommitTests(TestCase):
             self.assertEqual(self.counts(),before)
             User.objects.filter(pk=self.other.pk).update(is_active=True,username=self.other.username)
 
-    def test_invalid_dates_horizon_acknowledgement_and_description(self):
+    def test_preview_rejects_unsigned_horizon_and_invalid_details(self):
         raw=calculation(self.admin,self.workers);base=details_data(raw,self.contacts)
         for changes in ({"due_at":"bad"},{"due_at":(timezone.now()-timedelta(days=1)).isoformat()},
                         {"horizon_start":(timezone.now()+timedelta(days=3)).isoformat()},
@@ -306,10 +348,90 @@ class OptimizationCommitTests(TestCase):
             self.assertEqual(OptimizationCommit.objects.count(),0)
 
     def test_due_date_is_revalidated_at_final_post(self):
-        raw=self.token();payload=signing.loads(raw,salt=SALT)
-        payload["details"]["due_at"]=(timezone.now()-timedelta(seconds=1)).isoformat()
-        before=self.counts();self.assertEqual(self.post(sign_snapshot(payload)).status_code,409)
-        self.assertEqual(self.counts(),before)
+        raw = self.token()
+        end = source_due_at(signing.loads(raw, salt=SALT))
+        before = self.counts()
+        with patch("crm.forms.django_timezone.now", return_value=end):
+            response = self.post(raw)
+        self.assertContains(response, "Общий срок обработки истёк.", status_code=410)
+        self.assertEqual(self.counts(), before)
+
+    def test_due_date_passing_during_writes_rolls_back_even_the_receipt(self):
+        raw = self.token()
+        end = source_due_at(signing.loads(raw, salt=SALT))
+        before = self.counts()
+        with patch("crm.forms.django_timezone.now", return_value=end-timedelta(seconds=1)) as clock:
+            def write(form):
+                result = create_request_with_task(form)
+                clock.return_value = end
+                return result
+
+            with patch("crm.optimization_commit.create_request_with_task", side_effect=write):
+                response = self.post(raw)
+        self.assertContains(response, "истёк", status_code=410)
+        self.assertEqual(self.counts(), before)
+
+    def test_prepare_and_preview_reject_repeated_snapshots_and_horizon_edits(self):
+        raw = calculation(self.admin, self.workers)
+        before = self.counts()
+        for name, fields in (
+            ("optimization_prepare", {"snapshot": raw}),
+            ("optimization_preview", details_data(raw, self.contacts)),
+        ):
+            for key in ("horizon_start", "due_at", "estimates_confirmed"):
+                self.assertEqual(self.client.post(reverse(name), {**fields, key: "on"}).status_code, 400)
+            duplicate = QueryDict(mutable=True)
+            duplicate.update(fields)
+            duplicate.setlist("snapshot", [raw, raw])
+            self.assertEqual(self.client.post(reverse(name), duplicate.urlencode(),
+                                             content_type="application/x-www-form-urlencoded").status_code, 400)
+        self.assertEqual(self.counts(), before)
+
+    def test_new_signed_snapshot_rejects_horizon_in_details_or_missing_consent(self):
+        raw = self.token()
+        before = self.counts()
+        for section, key, value, status in (
+            ("details", "due_at", "2032-01-01T00:00", 400),
+            ("source", "estimates_confirmed", "", 409),
+        ):
+            payload = signing.loads(raw, salt=SALT)
+            payload[section][key] = value
+            self.assertEqual(self.post(sign_snapshot(payload)).status_code, status)
+        self.assertEqual(self.counts(), before)
+
+    def test_legacy_unfinished_calculation_and_preview_require_recalculation(self):
+        raw = sign_snapshot(legacy_payload(calculation(self.admin, self.workers)))
+        prepared_token = sign_snapshot(legacy_payload(self.token()))
+        before = self.counts()
+        for name, data in (
+            ("optimization_prepare", {"snapshot": raw}),
+            ("optimization_preview", details_data(raw, self.contacts)),
+            ("optimization_confirm", {"snapshot": prepared_token, "confirm_create": "on"}),
+        ):
+            response = self.client.post(reverse(name), data)
+            self.assertContains(response, "Выполните новый расчёт.", status_code=410)
+        self.assertEqual(self.counts(), before)
+
+    def test_legacy_completed_replays_after_ttl_and_due_without_changing_receipt(self):
+        new_token = self.token(unproven=True)
+        original = commit_snapshot(new_token, self.admin, accept_unproven=True)
+        payload = legacy_payload(new_token)
+        OptimizationCommit.objects.filter(pk=original.pk).update(digest=digest(payload))
+        receipt = OptimizationCommit.objects.values().get(pk=original.pk)
+        raw = sign_snapshot(payload)
+        end = datetime.fromisoformat(payload["details"]["due_at"])
+        before = self.counts()
+        with (patch("crm.optimization_commit.time.time", return_value=end.timestamp()+SNAPSHOT_TTL+2),
+              patch("crm.forms.django_timezone.now", return_value=end+timedelta(days=1))):
+            self.assertEqual(self.post(raw).status_code, 400)
+            response = self.post(raw, accept_unproven="on")
+            self.assertRedirects(response, reverse("optimization_result", args=[original.pk]))
+            changed = {**payload, "details": {**payload["details"], "due_at": payload["details"]["horizon_start"]}}
+            self.assertEqual(self.post(sign_snapshot(changed), accept_unproven="on").status_code, 409)
+            self.client.force_login(self.other_admin)
+            self.assertEqual(self.post(raw, accept_unproven="on").status_code, 403)
+        self.assertEqual(OptimizationCommit.objects.values().get(pk=original.pk), receipt)
+        self.assertEqual(self.counts(), before)
 
     def test_late_request_failure_rolls_back_every_request_task_and_receipt(self):
         raw=self.token(count=3);before=self.counts();calls=[]
@@ -462,7 +584,7 @@ class OptimizationConcurrencyTests(TransactionTestCase):
             self.assertEqual(task.assigned_to_id, request.assigned_to_id)
             self.assertEqual(task.request_id, request.pk)
             self.assertEqual((request.status, task.status), ("new", "new"))
-            self.assertEqual(request.due_at.isoformat(), payload["details"]["due_at"])
+            self.assertEqual(request.due_at, source_due_at(payload))
             self.assertEqual(task.due_at, request.due_at)
             self.assertEqual(request.tasks.count(), 1)
             self.assertTrue(task.is_automatic)

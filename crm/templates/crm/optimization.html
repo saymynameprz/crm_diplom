@@ -1,4 +1,5 @@
 {% extends "crm/base.html" %}
+{% load tz %}
 {% block title %}Оптимизация заявок{% endblock %}
 {% block card_class %}optimization-shell{% endblock %}
 {% block content %}
@@ -34,8 +35,13 @@
         <ul>{% for field in form %}{% if field.errors %}<li><a href="#{{ field.auto_id }}">{{ field.label }}: {{ field.errors|striptags }}</a></li>{% endif %}{% endfor %}</ul>
     </div>{% endif %}
     {{ form.non_field_errors }}
+    <section class="optimization-section" aria-labelledby="horizon-heading">
+    <h2 id="horizon-heading">2. Расчётный горизонт</h2>
+    <p>Задайте интервал UTC, к которому относятся оценки часов. Окончание горизонта станет общим сроком заявок и задач.</p>
+    <div class="optimization-grid"><div class="form-field">{{ form.horizon_start.as_field_group }}</div><div class="form-field">{{ form.due_at.as_field_group }}</div></div>
+    </section>
     <section class="optimization-section" aria-labelledby="employees-heading">
-    <h2 id="employees-heading">2. Сотрудники и мощности</h2>
+    <h2 id="employees-heading">3. Сотрудники и мощности</h2>
     <p id="hours-help">Время: часы:минуты (2:15) или десятичные часы (2.25, также 2,25). Только целые минуты, до 1000 часов. A — полная мощность за выбранный вами горизонт, L — уже занятое время; L ≤ A. Ставка от 0 до 1000000 ₽/ч, не более двух знаков после запятой.</p>
     <div class="optimization-scroll" role="region" aria-label="Мощности сотрудников" aria-describedby="hours-help optimization-scroll-help" tabindex="0">
         <table class="optimization-table">
@@ -50,7 +56,7 @@
     </div>
     </section>
     <section class="optimization-section" aria-labelledby="matrix-heading">
-    <h2 id="matrix-heading">3. Заявки и оценки трудоёмкости</h2>
+    <h2 id="matrix-heading">4. Заявки и оценки трудоёмкости</h2>
     <p id="matrix-help">Локальные ID от 1 до 999999 уникальны; название до 120 символов. В каждой допустимой паре укажите положительное время. <strong>Пустая ячейка означает отсутствие квалификации.</strong> Ноль не заменяет пустую ячейку. Порядок работы алгоритмов — по возрастанию локальных ID.</p>
     <div class="optimization-scroll" role="region" aria-label="Матрица трудоёмкости" aria-describedby="matrix-help optimization-scroll-help" tabindex="0">
         <table class="optimization-table optimization-matrix">
@@ -64,20 +70,22 @@
     </div>
     </section>
     <section class="optimization-section" aria-labelledby="weights-heading">
-    <h2 id="weights-heading">4. Веса критериев</h2>
+    <h2 id="weights-heading">5. Веса критериев</h2>
     <fieldset>
         <legend>Баланс стоимости и загрузки</legend>
         <p>α и β от 0 до 1, не более двух знаков после запятой; сумма точно 1. F = αC/C0 + βU. C0 задаётся моделью М1.</p>
         <div class="optimization-weights"><div class="form-field">{{ form.alpha.as_field_group }}</div><div class="form-field">{{ form.beta.as_field_group }}</div></div>
     </fieldset>
     <p>Поиск: не более {{ node_limit }} узлов B&amp;B, защитный лимит {{ time_limit }} с. Ограничитель проверяется между узлами, поэтому не является жёстким прерыванием HTTP-запроса.</p>
+    <div class="form-field optimization-consent">{{ form.estimates_confirmed.as_field_group }}</div>
     <div class="actions form-actions"><button type="submit">Рассчитать распределение</button></div>
     </section>
 </form>
 {% endif %}
 {% if recommendations %}
 <section aria-labelledby="results-heading" id="optimization-results">
-    <h2 id="results-heading">5. Результаты расчёта</h2>
+    <h2 id="results-heading">6. Результаты расчёта</h2>
+    {% if horizon_start %}<p id="optimization-result-horizon">Горизонт расчёта: {{ horizon_start|utc|date:"d.m.Y H:i" }} — {{ due_at|utc|date:"d.m.Y H:i" }} UTC. Для изменения дат сверьте оценки, подтвердите их заново и выполните расчёт.</p>{% endif %}
     <p>Источник данных — ручные экспертные оценки, введённые в таблицах выше. Округление ниже используется только для отображения.</p>
     {% if rescued %}<p class="message message-info">Жадный алгоритм зашёл в тупик. Глобальный поиск нашёл полный допустимый план; отказ жадного метода не доказывает невыполнимость.</p>{% endif %}
     <div class="optimization-results-grid">
@@ -105,7 +113,7 @@
     </div>
     {% if comparison %}
     <section class="optimization-section" aria-labelledby="comparison-heading">
-    <h2 id="comparison-heading">6. Сравнение полных планов</h2>
+    <h2 id="comparison-heading">7. Сравнение полных планов</h2>
     <p class="message message-info">{% if comparison.better %}<strong>B&amp;B нашёл план с меньшим F.</strong>{% else %}<strong>B&amp;B не улучшил F относительно greedy.</strong>{% endif %} Отдельные показатели C, U и T могут меняться в разные стороны.</p>
     {% if not comparison.proven %}<p class="message message-warning">B&amp;B не доказал оптимальность. Сравниваются найденные допустимые планы; глобальный оптимум неизвестен.</p>{% endif %}
     <div class="optimization-scroll" role="region" aria-label="Сравнение метрик" tabindex="0">
@@ -118,10 +126,10 @@
     {% else %}<p class="message message-info">Сравнение доступно только при двух полных планах. Проценты улучшения не вычисляются при отсутствии плана.</p>{% endif %}
     <p class="muted">Изменение расчётных затрат не подтверждает экономию фактических выплат. Снижение трудозатрат не гарантирует более раннее календарное завершение. Оценки и веса можно исправить в форме и пересчитать.</p>
     {% if snapshot %}<section class="optimization-section optimization-next" aria-labelledby="prepare-heading">
-    <h2 id="prepare-heading">7. Переход к подтверждению</h2>
+    <h2 id="prepare-heading">8. Переход к подтверждению</h2>
     <form method="post" action="{% url 'optimization_prepare' %}">
         {% csrf_token %}<input type="hidden" name="snapshot" value="{{ snapshot }}">
-        <p>Полный план B&amp;B можно подготовить к созданию. Клиенты, общий срок и окончательное согласие запрашиваются отдельно.</p>
+        <p>Полный план B&amp;B использует горизонт, указанный при расчёте. На следующем шаге выберите клиентов и добавьте описания.</p>
         <button type="submit">Подготовить пакет заявок</button>
     </form></section>{% endif %}
 </section>

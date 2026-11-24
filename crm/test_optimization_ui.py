@@ -1,4 +1,5 @@
 """HTTP boundary, permissions, exact M2 delegation and read-only recommendations."""
+from datetime import datetime, timedelta, timezone as utc_timezone
 from decimal import Decimal
 from fractions import Fraction as Q
 from html.parser import HTMLParser
@@ -8,6 +9,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.db import connection
+from django.http import QueryDict
 from django.test import Client as TestClient, RequestFactory, SimpleTestCase, TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
@@ -17,6 +19,7 @@ from .forms import OptimizationForm, OptimizationHoursField
 from .models import Client, ClientRequest, Task, Deal, ClientInteraction
 from .optimization import Result, Status, branch_and_bound, greedy
 from .optimization_presentation import STATUS_TEXT, compare_results, display_number, present_result
+from .test_optimization_commit import horizon_data
 from .views import optimization
 
 
@@ -89,7 +92,7 @@ class OptimizationInterfaceTests(TestCase):
                 "employee_0": str(self.manager.pk), "capacity_0": "2", "occupied_0": "0", "rate_0": "100",
                 "employee_1": str(self.other.pk), "capacity_1": "2:15", "occupied_1": "0", "rate_1": "400",
                 "request_id_0": "1", "title_0": "Планируемая работа А", "effort_0_0": "1", "effort_0_1": "1",
-                "request_id_1": "2", "title_1": "Планируемая работа Б", "effort_1_0": "2", "effort_1_1": "2:15"}
+                "request_id_1": "2", "title_1": "Планируемая работа Б", "effort_1_0": "2", "effort_1_1": "2:15", **horizon_data()}
 
     def trap(self):
         return {**self.data(), "capacity_0": "1", "capacity_1": "1", "rate_0": "60", "rate_1": "120",
@@ -111,6 +114,41 @@ class OptimizationInterfaceTests(TestCase):
         g.assert_not_called()
         b.assert_not_called()
         return response
+
+    def test_horizon_bounds_are_required_ordered_strict_utc_dates_before_search(self):
+        base = self.data()
+        for field in ("horizon_start", "due_at"):
+            missing = base.copy()
+            del missing[field]
+            self.assert_invalid(missing, field)
+            for invalid in ("bad", "2027-02-30T00:00", "2027-01-01T24:00", "2027-01-01T00:00+03:00"):
+                self.assert_invalid({**base, field: invalid}, field)
+        self.assert_invalid({**base, "horizon_start": base["due_at"]}, "horizon_start")
+        self.assert_invalid({**base, "horizon_start": base["due_at"], "due_at": base["horizon_start"]}, "horizon_start")
+        self.assert_invalid({**base, "horizon_start": "2000-01-01T00:00", "due_at": "2000-01-02T00:00"}, "due_at")
+        with timezone.override("Europe/Moscow"):
+            result = self.client.post(self.url, base)
+        self.assertEqual(result.context["horizon_start"], datetime.fromisoformat(base["horizon_start"]).replace(tzinfo=utc_timezone.utc))
+
+    def test_repeated_dates_or_consent_are_rejected_before_search(self):
+        for field in ("horizon_start", "due_at", "estimates_confirmed"):
+            params = QueryDict(mutable=True)
+            params.update(self.data())
+            params.appendlist(field, params[field])
+            self.assert_invalid(params, field)
+
+    def test_calculation_requires_explicit_consent_and_recalculation_uses_new_horizon(self):
+        base = self.data()
+        for value in ("", "off", "false"):
+            self.assert_invalid({**base, "estimates_confirmed": value}, "estimates_confirmed")
+        original = self.client.post(self.url, base)
+        end = (datetime.fromisoformat(base["due_at"])+timedelta(days=1)).isoformat(timespec="minutes")
+        self.assert_invalid({**base, "due_at": end, "estimates_confirmed": ""}, "estimates_confirmed")
+        recalculated = self.client.post(self.url, {**base, "due_at": end})
+        self.assertNotEqual(original.context["snapshot"], recalculated.context["snapshot"])
+        self.assertNotEqual(original.context["due_at"], recalculated.context["due_at"])
+        checkbox = re.search(r'<input[^>]*name="estimates_confirmed"[^>]*>', recalculated.content.decode())
+        self.assertNotIn("checked", checkbox[0])
 
     def test_active_superuser_without_staff_opens_page(self):
         response = self.client.get(self.url)
@@ -261,7 +299,7 @@ class OptimizationInterfaceTests(TestCase):
 
     def test_maximum_six_by_four_input_is_accepted(self):
         users = (self.manager, self.other, self.admin, self.staff)
-        data = {"request_count": "6", "employee_count": "4", "alpha": "0.5", "beta": "0.5"}
+        data = {"request_count": "6", "employee_count": "4", "alpha": "0.5", "beta": "0.5", **horizon_data()}
         for j, user in enumerate(users):
             data.update({f"employee_{j}": str(user.pk), f"capacity_{j}": "1000", f"occupied_{j}": "0", f"rate_{j}": "1000000"})
         for i in range(6):

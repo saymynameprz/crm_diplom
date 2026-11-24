@@ -4,7 +4,7 @@
 {% block card_class %}optimization-shell{% endblock %}
 {% block content %}
 <header class="page-header"><div><h1>{% if commit %}Результат создания пакета{% else %}Подтверждение распределения{% endif %}</h1>
-<p class="muted">{% if commit %}Созданные записи и результат этого подтверждения.{% elif prepared %}Проверьте весь пакет перед созданием записей CRM.{% elif details_form %}Свяжите план с клиентами и задайте общий срок.{% else %}Проверьте сообщение и доступное действие ниже.{% endif %}</p></div>{% if prepared %}<a class="button button-secondary" href="#optimization-final">К подтверждению</a>{% endif %}</header>
+<p class="muted">{% if commit %}Созданные записи и результат этого подтверждения.{% elif prepared %}Проверьте весь пакет перед созданием записей CRM.{% elif details_form %}Свяжите план с клиентами и добавьте описания.{% else %}Проверьте сообщение и доступное действие ниже.{% endif %}</p></div>{% if prepared %}<a class="button button-secondary" href="#optimization-final">К подтверждению</a>{% endif %}</header>
 <ol class="optimization-steps" aria-label="Этапы подготовки пакета"><li>1. Расчёт</li><li{% if details_form %} aria-current="step"{% endif %}>2. Реквизиты</li><li{% if prepared %} aria-current="step"{% endif %}>3. Предпросмотр</li><li{% if commit %} aria-current="step"{% endif %}>4. Результат</li></ol>
 {% if error %}<div class="message {% if retry_form and not retry_form.errors %}message-warning{% else %}message-error{% endif %}" role="alert"><strong>{% if retry_form and not retry_form.errors %}Результат требует проверки{% else %}Подтверждение не завершено{% endif %}</strong><p>{{ error }}</p></div>{% endif %}
 {% if retry_form %}
@@ -62,17 +62,15 @@
 </section>
 {% if details_form %}
 <section class="optimization-section" aria-labelledby="details-heading">
-<h2 id="details-heading">Клиенты, описания и общий срок</h2>
+<h2 id="details-heading">Клиенты и описания</h2>
+<p id="optimization-calculation-horizon">Горизонт расчёта: {{ horizon_start|utc|date:"d.m.Y H:i" }} — {{ due_at|utc|date:"d.m.Y H:i" }} UTC. Для изменения дат выполните новый расчёт.</p>
 <form method="post" action="{% url 'optimization_preview' %}" id="optimization-details">
     {% csrf_token %}{{ details_form.snapshot }}{{ details_form.non_field_errors }}
     {% if details_form.errors %}<p class="error" role="alert">Исправьте отмеченные поля. Никакие заявки не созданы.</p>{% endif %}
-    <div class="optimization-grid"><div class="form-field">{{ details_form.horizon_start.as_field_group }}</div><div class="form-field">{{ details_form.due_at.as_field_group }}</div></div>
-    <p>Общий срок в UTC должен быть в будущем. М2 не строит расписание и не гарантирует соблюдение срока. A/L должны относиться к указанному вами горизонту.</p>
-    <div class="optimization-detail-fields">{% for field in details_form.visible_fields %}{% if field.name != "horizon_start" and field.name != "due_at" and field.name != "estimates_confirmed" %}<div class="form-field">{{ field.as_field_group }}</div>{% endif %}{% endfor %}</div>
+    <div class="optimization-detail-fields">{% for field in details_form.visible_fields %}<div class="form-field">{{ field.as_field_group }}</div>{% endfor %}</div>
     <div class="optimization-scroll" role="region" aria-label="План назначения" aria-describedby="optimization-scroll-help" tabindex="0">
         <table class="optimization-assignments"><caption>Названия и ответственные из подписанного плана</caption><thead><tr><th scope="col">ID</th><th scope="col">Заявка</th><th scope="col">Ответственный</th></tr></thead><tbody>{% for row in package_rows %}<tr><th scope="row">{{ row.id }}</th><td>{{ row.title }}</td><td>{{ row.employee }}</td></tr>{% endfor %}</tbody></table>
     </div>
-    <div class="form-field optimization-consent">{{ details_form.estimates_confirmed.as_field_group }}</div>
     <div class="actions form-actions"><button type="submit">Проверить и показать предпросмотр</button></div>
 </form>
 </section>
@@ -80,7 +78,7 @@
 {% if prepared %}
 <section class="optimization-section" aria-labelledby="preview-heading">
 <h2 id="preview-heading">Окончательный предпросмотр</h2>
-<p>Горизонт: {{ horizon_start|utc|date:"d.m.Y H:i" }} — {{ due_at|utc|date:"d.m.Y H:i" }} UTC. Общий due_at всех заявок и задач: <strong>{{ due_at|utc|date:"d.m.Y H:i" }} UTC</strong>.</p>
+<p id="optimization-preview-horizon">Горизонт расчёта: {{ horizon_start|utc|date:"d.m.Y H:i" }} — {{ due_at|utc|date:"d.m.Y H:i" }} UTC. Общий срок всех заявок и задач: <strong>{{ due_at|utc|date:"d.m.Y H:i" }} UTC</strong>.</p>
 <div class="optimization-scroll" role="region" aria-label="Пакет к созданию" aria-describedby="optimization-scroll-help" tabindex="0">
     <table class="optimization-assignments"><caption>Весь пакет будет создан атомарно</caption><thead><tr><th scope="col">ID</th><th scope="col">Клиент</th><th scope="col">Заявка и описание</th><th scope="col">Ответственный</th></tr></thead>
         <tbody>{% for row in package_rows %}<tr><th scope="row">{{ row.id }}</th><td>{{ row.client.full_name }}</td><td>{{ row.title }}{% if row.description %}<p>{{ row.description|linebreaksbr }}</p>{% endif %}</td><td>{{ row.employee }}</td></tr>{% endfor %}</tbody>

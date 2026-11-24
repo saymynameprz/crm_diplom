@@ -601,6 +601,8 @@ def optimization(request):
             context["comparison"] = compare_results(g, b)
             context["rescued"] = g.status == Status.HEURISTIC_FAILED and b.assignment is not None
             context["results"] = (g, b)
+            context["horizon_start"] = form.cleaned_data["horizon_start"]
+            context["due_at"] = form.cleaned_data["due_at"]
             context["snapshot"] = issue_snapshot(form, b, request.user)
         except Exception:
             # Only the web boundary converts failures; M2 still raises bugs in direct tests.
@@ -634,6 +636,7 @@ def _optimization_preview_context(verified):
     employees, requests = input_rows(form)
     return {"recommendation": present_result(result, titles, names), "source_employees": employees,
             "source_requests": requests, "source_form": form,
+            "horizon_start": form.cleaned_data["horizon_start"], "due_at": form.cleaned_data["due_at"],
             "package_rows": [{"id": i, "title": titles[i], "employee": names[j]}
                              for i, j in result.assignment]}
 
@@ -660,7 +663,7 @@ def optimization_prepare(request):
         raw = form.cleaned_data["snapshot"]
         verified = read_snapshot(raw, request.user)
         details_form = OptimizationDetailsForm(local_ids=[i for i, _ in verified.result.assignment],
-            initial={"snapshot": raw, "horizon_start": timezone.now()})
+            initial={"snapshot": raw})
         context = _optimization_preview_context(verified)
         context["details_form"] = details_form
         return render(request, "crm/optimization_confirm.html", context)
@@ -691,8 +694,7 @@ def optimization_preview(request):
         for row in context["package_rows"]:
             row["client"] = details_form.cleaned_data[f"client_{row['id']}"]
             row["description"] = details_form.cleaned_data[f"description_{row['id']}"]
-        context.update(horizon_start=details_form.cleaned_data["horizon_start"],
-                       due_at=details_form.cleaned_data["due_at"], prepared=True,
+        context.update(prepared=True,
                        final_form=OptimizationFinalForm(initial={"snapshot": signed},
                            unproven=verified.result.status == Status.FEASIBLE_NOT_PROVEN))
         return render(request, "crm/optimization_confirm.html", context)

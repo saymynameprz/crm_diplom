@@ -18,6 +18,7 @@ from .services import create_request_with_task
 
 
 SALT = "crm.optimization.confirm.v1"
+SNAPSHOT_VERSION = 2
 SNAPSHOT_TTL = 15 * 60
 ALLOWED = (Status.OPTIMAL.value, Status.FEASIBLE_NOT_PROVEN.value)
 METRICS = ("cost", "utilization", "labor_hours", "objective", "cost_scale")
@@ -61,7 +62,10 @@ def issue_snapshot(form, result, actor):
         raise RuntimeError("M2 result disagrees with direct mathematical validation")
     data = form.cleaned_data
     source = {"request_count": str(form.request_count), "employee_count": str(form.employee_count),
-              "alpha": format(data["alpha"], "f"), "beta": format(data["beta"], "f")}
+              "alpha": format(data["alpha"], "f"), "beta": format(data["beta"], "f"),
+              "estimates_confirmed": "on"}
+    for name in ("horizon_start", "due_at"):
+        source[name] = data[name].replace(tzinfo=None).isoformat(timespec="minutes")
     users = {}
     for j in range(form.employee_count):
         identifier = data[f"employee_{j}"]
@@ -73,7 +77,7 @@ def issue_snapshot(form, result, actor):
         for j in range(form.employee_count):
             value = data[f"effort_{i}_{j}"]
             source[f"effort_{i}_{j}"] = "" if value is None else _hours(value)
-    return sign_snapshot({"version": 1, "stage": "calculation", "token": str(uuid.uuid4()),
+    return sign_snapshot({"version": SNAPSHOT_VERSION, "stage": "calculation", "token": str(uuid.uuid4()),
         "actor": actor.pk, "issued": int(time.time()), "source": source, "users": users,
         "plan": {"status": result.status.value, "assignment": [list(pair) for pair in result.assignment],
                  "metrics": _metrics(checked), "nodes": result.nodes_visited, "reason": result.termination_reason}})
@@ -81,14 +85,19 @@ def issue_snapshot(form, result, actor):
 
 def _details_shape(payload):
     details = payload.get("details")
-    if not isinstance(details, dict) or set(details) != {"horizon_start", "due_at", "estimates_confirmed", "rows"}:
+    keys = {"rows"}
+    if payload["version"] == 1:
+        keys.update(("horizon_start", "due_at", "estimates_confirmed"))
+    if not isinstance(details, dict) or set(details) != keys:
         raise CommitError("Состав предпросмотра повреждён.", 400)
-    if (details["estimates_confirmed"] is not True or not isinstance(details["rows"], list)
-            or not 1 <= len(details["rows"]) <= 6):
+    if not isinstance(details["rows"], list) or not 1 <= len(details["rows"]) <= 6:
         raise CommitError("Неполный пакет подтверждения.", 400)
-    for name in ("horizon_start", "due_at"):
-        if not isinstance(details[name], str) or len(details[name]) > 32:
-            raise CommitError("Некорректный плановый горизонт.", 400)
+    if payload["version"] == 1:
+        if details["estimates_confirmed"] is not True:
+            raise CommitError("Неполный пакет подтверждения.", 400)
+        for name in ("horizon_start", "due_at"):
+            if not isinstance(details[name], str) or len(details[name]) > 32:
+                raise CommitError("Некорректный плановый горизонт.", 400)
     ids = []
     for row in details["rows"]:
         if (not isinstance(row, dict) or set(row) != {"local_id", "client", "client_digest", "description"}
@@ -115,7 +124,7 @@ def decode_snapshot(raw, actor, *, stage, allow_expired=False):
     if stage == "prepared":
         keys.add("details")
     if (not isinstance(payload, dict) or set(payload) != keys or type(payload["version"]) is not int
-            or payload["version"] != 1 or payload["stage"] != stage):
+            or payload["version"] not in (1, SNAPSHOT_VERSION) or payload["stage"] != stage):
         raise CommitError("Неподдерживаемый снимок подтверждения.", 400)
     if type(payload["actor"]) is not int or payload["actor"] != actor.pk:
         raise CommitError("Этот снимок принадлежит другому администратору.", 403)
@@ -137,6 +146,8 @@ def decode_snapshot(raw, actor, *, stage, allow_expired=False):
 
 def read_snapshot(raw, actor, *, stage="calculation"):
     payload = decode_snapshot(raw, actor, stage=stage)
+    if payload["version"] == 1:
+        raise CommitError("В старом снимке оценки не связаны с датами. Выполните новый расчёт.", 410)
     source = payload["source"]
     if not isinstance(source, dict) or not all(isinstance(v, str) for v in source.values()):
         raise CommitError("Некорректные экспертные входы.", 400)
@@ -145,7 +156,11 @@ def read_snapshot(raw, actor, *, stage="calculation"):
         raise CommitError("Размер пакета не соответствует пределам М3А.", 400)
     users = list(get_user_model().objects.filter(is_active=True).order_by("username", "pk"))
     form = OptimizationForm(source, users=users, **sizes.cleaned_data)
-    if set(source) != set(form.fields) | {"request_count", "employee_count"} or not form.is_valid():
+    if set(source) != set(form.fields) | {"request_count", "employee_count"}:
+        raise CommitError("Состав исходного расчёта изменился. Выполните новый расчёт.", 400)
+    if not form.is_valid():
+        if form.has_error("due_at", "expired"):
+            raise CommitError("Общий срок обработки истёк. Выполните новый расчёт.", 410)
         raise CommitError("Исходные данные или активность сотрудников изменились. Выполните новый расчёт.")
     actual_names = {str(form.cleaned_data[f"employee_{j}"]): form.users[form.cleaned_data[f"employee_{j}"]].get_username()
                     for j in range(form.employee_count)}
@@ -187,17 +202,16 @@ def prepare_snapshot(verified, details_form, actor):
     if not details_form.is_valid():
         raise ValueError("Expected valid package details")
     data = details_form.cleaned_data
+    due_at = verified.form.cleaned_data["due_at"]
     rows = []
     for identifier, _ in verified.result.assignment:
         client = data[f"client_{identifier}"]
         row = {"local_id": identifier, "client": client.pk, "client_digest": client_digest(client),
                "description": data[f"description_{identifier}"]}
-        if not request_form(verified, row, data["due_at"], actor).is_valid():
+        if not request_form(verified, row, due_at, actor).is_valid():
             raise CommitError(f"Заявка {identifier} не прошла действующую форму CRM.")
         rows.append(row)
-    payload = {**verified.payload, "stage": "prepared", "details": {
-        "horizon_start": data["horizon_start"].isoformat(), "due_at": data["due_at"].isoformat(),
-        "estimates_confirmed": True, "rows": rows}}
+    payload = {**verified.payload, "stage": "prepared", "details": {"rows": rows}}
     return sign_snapshot(payload)
 
 
@@ -239,13 +253,13 @@ def commit_snapshot(raw, actor, *, accept_unproven=False):
             for row in details["rows"]:
                 if row["client"] not in clients or client_digest(clients[row["client"]]) != row["client_digest"]:
                     raise CommitError("Клиент удалён или изменён. Подготовьте новый предпросмотр.")
-            data = {"snapshot": raw, "horizon_start": details["horizon_start"], "due_at": details["due_at"], "estimates_confirmed": "on"}
+            data = {"snapshot": raw}
             for row in details["rows"]:
                 data.update({f"client_{row['local_id']}": str(row["client"]), f"description_{row['local_id']}": row["description"]})
             details_form = OptimizationDetailsForm(data, local_ids=[i for i, _ in verified.result.assignment])
             if not details_form.is_valid():
-                raise CommitError("Клиенты или общий срок больше не подходят. Подготовьте новый предпросмотр.")
-            due_at = details_form.cleaned_data["due_at"]
+                raise CommitError("Данные клиентов больше не подходят. Подготовьте новый предпросмотр.")
+            due_at = verified.form.cleaned_data["due_at"]
             created = []
             for row in details["rows"]:
                 form = request_form(verified, row, due_at, locked[actor.pk])
